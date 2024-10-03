@@ -21,7 +21,7 @@ const Login = () => {
                     setError('No account found with this email.');
                     break;
                 case 'auth/invalid-credential':
-                    setError('Incorrect password.');
+                    setError('Incorrect email/password.');
                     break;
                 default:
                     setError('Failed to log in. Please try again.');
