@@ -1,16 +1,19 @@
 import { useState } from "react";
 import { auth } from '../firebaseConfig';
 import { signInWithEmailAndPassword } from "firebase/auth";
+import { useNavigate } from "react-router-dom";
 
 const Login = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
-    const [error, setError] = useState(null);  // To store error message
+    const [error, setError] = useState(null);
+    const navigate = useNavigate();
 
     const handleLogin = async () => {
         try {
             const userCredential = await signInWithEmailAndPassword(auth, email, password);
             console.log('User logged in:', userCredential);
+            navigate('/dashboard')
         } catch (error) {
             // Catch Firebase error and display it to the user
             switch (error.code) {
@@ -20,8 +23,8 @@ const Login = () => {
                 case 'auth/user-not-found':
                     setError('No account found with this email.');
                     break;
-                case 'auth/invalid-credential':
-                    setError('Incorrect email/password.');
+                case 'auth/wrong-password':
+                    setError('Incorrect password.');
                     break;
                 default:
                     setError('Failed to log in. Please try again.');
