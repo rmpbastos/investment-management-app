@@ -1,15 +1,20 @@
 const express = require('express');
+const cors = require('cors');
 const axios = require('axios');
+const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
-const Portfolio = require('./models/Portfolio/Portfolio');
+const Portfolio = require('./models/Portfolio');
 require('dotenv').config();
 
 const app = express();
 const port = process.env.PORT || 5000;
 
+app.use(cors());
+app.use(bodyParser.json());
+
 
 // Connect to MongoDB Atlas
-mongoose.connect(process.env.MONGODB_URI, { useNewUrlParser: true, useUnifiedTopology: true })
+mongoose.connect(process.env.MONGODB_URI)
   .then(() => console.log('MongoDB connected...'))
   .catch(err => console.error('MongoDB connection error:', err));
 
@@ -36,23 +41,43 @@ app.get('/api/search/:query', async (req, res) => {
 
 // Route to add a stock to a user's portfolio
 app.post('/api/portfolio/add', async (req, res) => {
+    console.log(req.body);
     const { userId, stock } = req.body;
   
     try {
-      let portfolio = await Portfolio.findOne({ userId });
-  
-      if (!portfolio) {
-        portfolio = new Portfolio({ userId, stocks: [stock] });
-      } else {
-        portfolio.stocks.push(stock);
-      }
-  
-      await portfolio.save();
-      res.json({ message: 'Stock added to portfolio' });
+        let portfolio = await Portfolio.findOne({ userId });
+
+        if (!portfolio) {
+            portfolio = new Portfolio({ userId, stocks: [stock] });
+        } else {
+            portfolio.stocks.push(stock);
+        }
+
+        await portfolio.save();
+        res.json({ message: 'Stock added to portfolio' });
     } catch (error) {
-      res.status(500).json({ error: 'Error adding stock to portfolio' });
+        console.error('Error adding stock to portfolio:', error);
+        res.status(500).json({ error: 'Error adding stock to portfolio' });
     }
-  });
+});
+
+
+// Route to fetch user's portfolio
+app.get('/api/portfolio/:userId', async (req, res) => {
+    const userId = req.params.userId;
+
+    try {
+        const portfolio = await Portfolio.findOne({ userId });
+        if (!portfolio) {
+            return res.status(404).json({ error: 'Portfolio not found' });
+        }
+        res.json(portfolio.stocks);
+    } catch (error) {
+        res.status(500).json({ error: 'Error fetching portfolio data' });
+    }
+});
+
+
   
 
 
