@@ -1,29 +1,17 @@
 const express = require('express');
 const axios = require('axios');
+const mongoose = require('mongoose');
 require('dotenv').config();
 
 const app = express();
 const port = process.env.PORT || 5000;
 
 
-// Route to fetch stock meta data from Tiingo API
-// https://www.tiingo.com/documentation/end-of-day
-// app.get('/api/stock/:ticker', async (req, res) => {
-//     const ticker = req.params.ticker;
-//     const apiKey = process.env.TIINGO_API_KEY;
+// Connect to MongoDB Atlas
+mongoose.connect(process.env.MONGODB_URI, { useNewUrlParser: true, useUnifiedTopology: true })
+  .then(() => console.log('MongoDB connected...'))
+  .catch(err => console.error('MongoDB connection error:', err));
 
-//     try {
-//         const response = await axios.get(`https://api.tiingo.com/tiingo/daily/${ticker}`, {
-//             headers: {
-//                 'Content-Type': 'application/json',
-//                 'Authorization': `Token ${apiKey}`
-//             }
-//         });
-//         res.json(response.data)
-//     } catch (error) {
-//         res.status(500).json({ error: 'Error fetching stock data' });
-//     }
-// });
 
 // Route to search for stocks using Tiingo Search API
 // https://www.tiingo.com/documentation/utilities/search
