@@ -1,6 +1,7 @@
 const express = require('express');
 const axios = require('axios');
 const mongoose = require('mongoose');
+const Portfolio = require('./models/Portfolio/Portfolio');
 require('dotenv').config();
 
 const app = express();
@@ -31,6 +32,30 @@ app.get('/api/search/:query', async (req, res) => {
         res.status(500).json({ error: 'Error searching for stock data' });
     }
 });
+
+
+// Route to add a stock to a user's portfolio
+app.post('/api/portfolio/add', async (req, res) => {
+    const { userId, stock } = req.body;
+  
+    try {
+      let portfolio = await Portfolio.findOne({ userId });
+  
+      if (!portfolio) {
+        portfolio = new Portfolio({ userId, stocks: [stock] });
+      } else {
+        portfolio.stocks.push(stock);
+      }
+  
+      await portfolio.save();
+      res.json({ message: 'Stock added to portfolio' });
+    } catch (error) {
+      res.status(500).json({ error: 'Error adding stock to portfolio' });
+    }
+  });
+  
+
+
 
 
 
