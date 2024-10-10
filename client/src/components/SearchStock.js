@@ -2,7 +2,7 @@ import { useState } from "react";
 import axios from "axios";
 import { useAuth } from "../context/UserContext";
 
-const SearchStock = () => {
+const SearchStock = ({ setPortfolio }) => {
   const [query, setQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const [hoveredItem, setHoveredItem] = useState(null);
@@ -19,19 +19,23 @@ const SearchStock = () => {
 
   const addToPortfolio = async (stock) => {
     try {
-      const response = await axios.post('/api/portfolio/add', {
-        userId: currentUser.uid,
-        stock: {
-          ticker: stock.ticker,
-          name: stock.name,
-          assetType: stock.assetType
-        }
-      });
-      console.log(response.data.message);
+        const response = await axios.post('/api/portfolio/add', {
+            userId: currentUser.uid,
+            stock: {
+                ticker: stock.ticker,
+                name: stock.name,
+                assetType: stock.assetType
+            }
+        });
+        
+        // Fetch the updated portfolio
+        const portfolioResponse = await axios.get(`/api/portfolio/${currentUser.uid}`);
+        setPortfolio(portfolioResponse.data);  
+        console.log(response.data.message);
     } catch (error) {
-      console.error('Error adding to portfolio:', error);
+        console.error('Error adding to portfolio:', error);
     }
-  };
+};
   
 
   return (

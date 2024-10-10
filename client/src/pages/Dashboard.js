@@ -43,7 +43,7 @@ const Dashboard = () => {
             )}
             <div className="flex flex-col items-center justify-center">
                 <div className="mb-8 w-full">
-                    <SearchStock />
+                    <SearchStock setPortfolio={setPortfolio} />
                 </div>
             </div>
             
