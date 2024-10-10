@@ -1,10 +1,10 @@
 import './App.css';
-
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import Signup from './pages/Signup';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import PrivateRoute from './components/PrivateRoute';
+import StockDetailsForm from './pages/StockDetailsForm';
 
 function App() {
   return (
@@ -20,7 +20,14 @@ function App() {
             </PrivateRoute>
           }
         />
-
+        <Route 
+          path="/add-stock-details"
+          element={
+            <PrivateRoute>
+              <StockDetailsForm />
+            </PrivateRoute>
+          }
+        />
         <Route path="*" element={<Navigate to="/login" />} />
       </Routes>
     </Router>

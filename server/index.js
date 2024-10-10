@@ -78,6 +78,29 @@ app.get('/api/portfolio/:userId', async (req, res) => {
 });
 
 
+// Route to add stock details
+app.post('/api/portfolio/addDetails', async (req, res) => {
+    const { userId, stock } = req.body;
+  
+    try {
+      let portfolio = await Portfolio.findOne({ userId });
+  
+      if (!portfolio) {
+        portfolio = new Portfolio({ userId, stocks: [stock] });
+      } else {
+        portfolio.stocks.push(stock);
+      }
+  
+      await portfolio.save();
+      res.json({ message: 'Stock details added to portfolio' });
+    } catch (error) {
+      console.error('Error adding stock details to portfolio:', error);
+      res.status(500).json({ error: 'Error adding stock details to portfolio' });
+    }
+  });
+  
+
+
   
 
 
