@@ -20,26 +20,6 @@ const SearchStock = ({ setPortfolio }) => {
     }
   };
 
-
-  // OLD IMPLEMENTATION *** DELETE ***
-  // const addToPortfolio = async (stock) => {
-  //   try {
-  //     await axios.post("/api/portfolio/add", {
-  //       userId: currentUser.uid,
-  //       stock: {
-  //         ticker: stock.ticker,
-  //         name: stock.name,
-  //         assetType: stock.assetType,
-  //       },
-  //     });
-  //     const portfolioResponse = await axios.get(`/api/portfolio/${currentUser.uid}`);
-  //     setPortfolio(portfolioResponse.data);
-  //     setSearchResults([]);
-  //   } catch (error) {
-  //     console.error("Error adding to portfolio:", error);
-  //   }
-  // };
-
   const addToPortfolio = (stock) => {
     navigate("/add-stock-details", { state: { stock, userId: currentUser.uid } });
   }

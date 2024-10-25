@@ -2,6 +2,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import axios from "axios";
 import Header from "../components/Header";
+import Footer from "../components/Footer";
 
 const StockDetailsForm = () => {
   const { state } = useLocation();
@@ -87,6 +88,7 @@ const StockDetailsForm = () => {
           Add to Portfolio
         </button>
       </form>
+      <Footer />
     </div>
   );
 };

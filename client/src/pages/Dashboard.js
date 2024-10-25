@@ -4,6 +4,7 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
+import StockCard from "../components/StockCard";
 
 const Dashboard = () => {
   const { currentUser } = useAuth();
@@ -26,24 +27,16 @@ const Dashboard = () => {
   }, [currentUser]);
 
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col min-h-screen bg-gray-100">
       <Header setPortfolio={setPortfolio} />
-      <main className="flex flex-col items-center justify-center flex-grow bg-gray-100 p-6">
-        <h1 className="text-3xl font-bold mb-4">Welcome to Your Dashboard!</h1>
-        <div className="w-full max-w-md bg-white p-6 rounded-lg shadow-lg mt-6">
-          <h2 className="text-2xl font-semibold mb-4">Your Portfolio</h2>
+      <main className="flex flex-col items-start justify-start flex-grow p-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 w-full">
           {portfolio.length > 0 ? (
-            <ul className="space-y-2">
-              {portfolio.map((stock, index) => (
-                <li key={index} className="border-b py-2">
-                  <p><strong>Symbol:</strong> {stock.ticker}</p>
-                  <p><strong>Name:</strong> {stock.name}</p>
-                  <p><strong>Asset Type:</strong> {stock.assetType}</p>
-                </li>
-              ))}
-            </ul>
+            portfolio.map((stock, index) => (
+              <StockCard key={index} stock={stock} />
+            ))
           ) : (
-            <p>No stocks in portfolio</p>
+            <p className="text-center">No stocks in portfolio</p>
           )}
         </div>
       </main>
