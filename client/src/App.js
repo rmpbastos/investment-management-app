@@ -5,6 +5,7 @@ import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import PrivateRoute from './components/PrivateRoute';
 import StockDetailsForm from './pages/StockDetailsForm';
+import StockDetails from './pages/StockDetails';
 
 function App() {
   return (
@@ -17,6 +18,14 @@ function App() {
           element={
             <PrivateRoute>
               <Dashboard />
+            </PrivateRoute>
+          }
+        />
+        <Route 
+          path="/stock-details/:ticker"
+          element={
+            <PrivateRoute>
+              <StockDetails />
             </PrivateRoute>
           }
         />
