@@ -62,20 +62,6 @@ app.post('/api/portfolio/add', async (req, res) => {
 });
 
 
-// Route to fetch user's portfolio
-// app.get('/api/portfolio/:userId', async (req, res) => {
-//     const userId = req.params.userId;
-
-//     try {
-//         const portfolio = await Portfolio.findOne({ userId });
-//         if (!portfolio) {
-//             return res.status(404).json({ error: 'Portfolio not found' });
-//         }
-//         res.json(portfolio.stocks);
-//     } catch (error) {
-//         res.status(500).json({ error: 'Error fetching portfolio data' });
-//     }
-// });
 
 app.get('/api/portfolio/:userId', async (req, res) => {
     const userId = req.params.userId;
@@ -92,62 +78,6 @@ app.get('/api/portfolio/:userId', async (req, res) => {
 });
 
 
-
-
-
-
-
-// Route to aggregate stock data by ticker
-// app.get('/api/portfolio/aggregate/:userId', async (req, res) => {
-//     const userId = req.params.userId;
-  
-//     try {
-//       const portfolio = await Portfolio.findOne({ userId });
-//       if (!portfolio) {
-//         return res.status(404).json({ error: 'Portfolio not found' });
-//       }
-  
-//       // Grouping stocks by ticker
-//       const aggregatedStocks = portfolio.stocks.reduce((acc, stock) => {
-//         const { ticker, name, assetType, quantity, purchasePrice, brokerageFees } = stock;
-  
-//         if (!acc[ticker]) {
-//           acc[ticker] = {
-//             ticker,
-//             name,
-//             assetType,
-//             totalQuantity: 0,
-//             totalCost: 0,
-//             totalPurchasePrice: 0,
-//             numPurchases: 0
-//           };
-//         }
-  
-//         // Accumulate total quantity and cost
-//         acc[ticker].totalQuantity += quantity;
-//         acc[ticker].totalCost += (quantity * purchasePrice) + brokerageFees;
-//         acc[ticker].totalPurchasePrice += purchasePrice;
-//         acc[ticker].numPurchases += 1;
-  
-//         return acc;
-//       }, {});
-  
-//       // Calculate average purchase price for each stock
-//       const result = Object.values(aggregatedStocks).map(stock => ({
-//         ticker: stock.ticker,
-//         name: stock.name,
-//         assetType: stock.assetType,
-//         totalQuantity: stock.totalQuantity,
-//         averagePurchasePrice: stock.totalPurchasePrice / stock.numPurchases,
-//         totalCost: stock.totalCost
-//       }));
-  
-//       res.json(result);
-//     } catch (error) {
-//       console.error('Error aggregating stock data:', error);
-//       res.status(500).json({ error: 'Error aggregating stock data' });
-//     }
-//   });
 
 
 // Route to aggregate stock data by ticker
