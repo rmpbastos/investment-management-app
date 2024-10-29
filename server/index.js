@@ -4,6 +4,8 @@ const axios = require('axios');
 const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
 const Portfolio = require('./models/Portfolio');
+const DailyStockPrice = require('./models/DailyStockPrice');
+
 require('dotenv').config();
 
 const app = express();
@@ -129,16 +131,6 @@ app.get('/api/portfolio/aggregate/:userId', async (req, res) => {
   });
 
 
-
-
-
-
-
-
-
-
-
-
 // Route to add stock details
 app.post('/api/portfolio/addDetails', async (req, res) => {
     const { userId, stock } = req.body;
@@ -160,6 +152,61 @@ app.post('/api/portfolio/addDetails', async (req, res) => {
     }
   });
   
+
+
+
+// Route to fetch the latest stock prices
+app.get('/api/stock/latest/:ticker', async (req, res) => {
+  const ticker = req.params.ticker;
+  const apiKey = process.env.TIINGO_API_KEY;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);  // Set to start of today
+
+  try {
+      // Check if we have today's data cached in the database
+      let dailyPrice = await DailyStockPrice.findOne({ ticker, date: today });
+
+      if (dailyPrice) {
+          // If data exists for today, return it from the cache
+          return res.json({
+              open: dailyPrice.open,
+              close: dailyPrice.close
+          });
+      }
+
+      // If no data exists for today, make an API call to Tiingo
+      const response = await axios.get(`https://api.tiingo.com/tiingo/daily/${ticker}/prices`, {
+          headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Token ${apiKey}`
+          }
+      });
+
+      if (response.data && response.data.length > 0) {
+          const latestData = response.data[0];  // Take the most recent price data
+          const { open, close } = latestData;
+
+          // Save the data to the cache
+          dailyPrice = new DailyStockPrice({
+              ticker,
+              open,
+              close,
+              date: today
+          });
+          await dailyPrice.save();
+
+          // Return the fetched data
+          return res.json({ open, close });
+      } else {
+          return res.status(404).json({ error: 'No data found for this ticker' });
+      }
+  } catch (error) {
+      console.error(`Error fetching latest price for ${ticker}:`, error);
+      res.status(500).json({ error: 'Error fetching latest price' });
+  }
+});
+
+
 
 
   
