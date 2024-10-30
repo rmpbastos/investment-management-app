@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import axios from "axios";
-import StockCard from "../components/StockCard";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import { useAuth } from "../context/UserContext"; // Import useAuth to get user information
+// import StockCard from "../components/StockCard";
+import StockDetailsCard from "../components/StockDetailsCard";
+
 
 const StockDetails = () => {
   const { currentUser } = useAuth(); // Retrieve current user information
@@ -38,7 +40,8 @@ const StockDetails = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 w-full">
           {stockDetails.length > 0 ? (
             stockDetails.map((stock, index) => (
-              <StockCard key={index} stock={stock} />
+              // <StockCard key={index} stock={stock} />
+              <StockDetailsCard key={index} stock={stock} />
             ))
           ) : (
             <p className="text-center">No details available for this stock</p>

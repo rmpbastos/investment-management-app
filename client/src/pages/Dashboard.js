@@ -76,6 +76,7 @@ import Header from "../components/Header";
 import Footer from "../components/Footer";
 import StockCard from "../components/StockCard";
 
+
 const Dashboard = () => {
   const { currentUser } = useAuth();
   const navigate = useNavigate();
@@ -155,7 +156,7 @@ const Dashboard = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 w-full">
               {portfolio.length > 0 ? (
                 portfolio.map((stock, index) => (
-                  <StockCard key={index} stock={stock} onClick={() => handleCardClick(stock.ticker)} />
+                  <StockCard key={index} stock={stock} onClick={() => handleCardClick(stock.ticker)} />                  
                 ))
               ) : (
                 <p className="text-center text-gray-600">Your portfolio is empty. Start adding stocks to track your investments!</p>
