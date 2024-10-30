@@ -5,7 +5,9 @@ const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
 const Portfolio = require('./models/Portfolio');
 const DailyStockPrice = require('./models/DailyStockPrice');
-const UserProfile = require('./models/UserProfile'); // Import the new model
+const UserProfile = require('./models/UserProfile');
+const TotalWealth = require('./models/TotalWealth');
+
 
 require('dotenv').config();
 
@@ -43,26 +45,57 @@ app.get('/api/search/:query', async (req, res) => {
 
 
 // Route to add a stock to a user's portfolio
-app.post('/api/portfolio/add', async (req, res) => {
-    console.log(req.body);
-    const { userId, stock } = req.body;
+// app.post('/api/portfolio/add', async (req, res) => {
+//     console.log(req.body);
+//     const { userId, stock } = req.body;
   
-    try {
-        let portfolio = await Portfolio.findOne({ userId });
+//     try {
+//         let portfolio = await Portfolio.findOne({ userId });
 
-        if (!portfolio) {
-            portfolio = new Portfolio({ userId, stocks: [stock] });
-        } else {
-            portfolio.stocks.push(stock);
-        }
+//         if (!portfolio) {
+//             portfolio = new Portfolio({ userId, stocks: [stock] });
+//         } else {
+//             portfolio.stocks.push(stock);
+//         }
 
-        await portfolio.save();
-        res.json({ message: 'Stock added to portfolio' });
-    } catch (error) {
-        console.error('Error adding stock to portfolio:', error);
-        res.status(500).json({ error: 'Error adding stock to portfolio' });
+//         await portfolio.save();
+//         res.json({ message: 'Stock added to portfolio' });
+//     } catch (error) {
+//         console.error('Error adding stock to portfolio:', error);
+//         res.status(500).json({ error: 'Error adding stock to portfolio' });
+//     }
+// });
+
+app.post('/api/portfolio/add', async (req, res) => {
+  const { userId, stock } = req.body;
+
+  try {
+    // Find the user's portfolio
+    let portfolio = await Portfolio.findOne({ userId });
+
+    if (!portfolio) {
+      portfolio = new Portfolio({ userId, stocks: [stock] });
+    } else {
+      portfolio.stocks.push(stock);
     }
+
+    await portfolio.save();
+
+    // Update total wealth after saving the portfolio
+    try {
+      const updateResponse = await axios.post('http://localhost:5000/api/total-wealth/update', { userId });
+      console.log('Total wealth updated:', updateResponse.data);
+    } catch (updateError) {
+      console.error('Error updating total wealth:', updateError.response?.data || updateError.message);
+    }
+
+    res.json({ message: 'Stock added to portfolio and total wealth updated' });
+  } catch (error) {
+    console.error('Error adding stock to portfolio:', error);
+    res.status(500).json({ error: 'Error adding stock to portfolio' });
+  }
 });
+
 
 
 
@@ -208,39 +241,6 @@ app.get('/api/stock/latest/:ticker', async (req, res) => {
 });
 
 
-
-
-//User Profile routes
-// Create a new user profile
-// app.post('/api/user-profile/create', async (req, res) => {
-//   const { userId, email } = req.body;
-
-//   try {
-//     // Check if a profile already exists for the user
-//     const existingProfile = await UserProfile.findOne({ userId });
-//     if (existingProfile) {
-//       return res.status(200).json({ message: 'User profile already exists', userProfile: existingProfile });
-//     }
-
-//     // Create a new user profile if it doesn't exist
-//     const newUserProfile = new UserProfile({
-//       userId,
-//       email,
-//       firstName: '',
-//       lastName: '',
-//       phone: '',
-//       address: ''
-//     });
-
-//     await newUserProfile.save();
-//     return res.status(201).json({ message: 'User profile created successfully', userProfile: newUserProfile });
-//   } catch (error) {
-//     console.error('Error creating user profile:', error);
-//     return res.status(500).json({ error: 'Error creating user profile' });
-//   }
-// });
-
-
 app.post('/api/user-profile/create', async (req, res) => {
   const { userId, email } = req.body;
 
@@ -274,6 +274,152 @@ app.post('/api/user-profile/create', async (req, res) => {
     return res.status(500).json({ error: 'Error creating user profile or portfolio' });
   }
 });
+
+// Route to calculate and save user total wealth
+// app.post('/api/total-wealth/update', async (req, res) => {
+//   const { userId } = req.body;
+
+//   try {
+//     // Fetch the user's portfolio
+//     const portfolio = await Portfolio.findOne({ userId });
+//     if (!portfolio || portfolio.stocks.length === 0) {
+//       return res.status(404).json({ error: 'No portfolio found or portfolio is empty' });
+//     }
+
+//     // Calculate total wealth
+//     let totalWealth = 0;
+//     for (const stock of portfolio.stocks) {
+//       const { ticker, quantity } = stock;
+
+//       // Fetch the latest stock price from the DailyStockPrice collection
+//       const latestPrice = await DailyStockPrice.findOne({ ticker }).sort({ date: -1 });
+
+//       if (latestPrice && latestPrice.close) {
+//         totalWealth += latestPrice.close * quantity;
+//       } else {
+//         console.log(`No latest price data found for ${ticker}`);
+//       }
+//     }
+
+//     if (totalWealth === 0) {
+//       console.log(`Total wealth remains zero for userId: ${userId}. Check stock price data.`);
+//       return res.status(400).json({ error: 'Total wealth could not be calculated due to missing stock prices.' });
+//     }
+
+//     // Create a new TotalWealth entry
+//     const userWealth = new TotalWealth({
+//       userId,
+//       totalWealth,
+//       calculationDate: new Date(),
+//     });
+
+//     await userWealth.save();
+//     res.status(201).json({ message: 'Total wealth calculated and stored successfully', totalWealth });
+//   } catch (error) {
+//     console.error('Error calculating total wealth:', error);
+//     res.status(500).json({ error: 'Error calculating total wealth' });
+//   }
+// });
+
+// Route to calculate and save user total wealth
+app.post('/api/total-wealth/update', async (req, res) => {
+  const { userId } = req.body;
+  const apiKey = process.env.TIINGO_API_KEY;
+
+  try {
+    // Fetch the user's portfolio
+    const portfolio = await Portfolio.findOne({ userId });
+    if (!portfolio || portfolio.stocks.length === 0) {
+      return res.status(404).json({ error: 'No portfolio found or portfolio is empty' });
+    }
+
+    // Calculate total wealth
+    let totalWealth = 0;
+    for (const stock of portfolio.stocks) {
+      const { ticker, quantity } = stock;
+
+      // Fetch the latest stock price from the DailyStockPrice collection
+      let latestPrice = await DailyStockPrice.findOne({ ticker }).sort({ date: -1 });
+
+      // If there's no price data, fetch from Tiingo
+      if (!latestPrice) {
+        console.log(`No local price data found for ${ticker}, fetching from Tiingo...`);
+
+        try {
+          const response = await axios.get(`https://api.tiingo.com/tiingo/daily/${ticker}/prices`, {
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Token ${apiKey}`,
+            },
+          });
+
+          if (response.data && response.data.length > 0) {
+            const { open, close } = response.data[0];  // Take the most recent price data
+            latestPrice = new DailyStockPrice({ ticker, open, close, date: new Date() });
+            await latestPrice.save();  // Save the fetched price to the database
+            console.log(`Price data saved for ${ticker}.`);
+          } else {
+            console.log(`No price data found for ${ticker} from Tiingo.`);
+            continue;  // Skip this stock if no data is found
+          }
+        } catch (apiError) {
+          console.error(`Error fetching price for ${ticker} from Tiingo:`, apiError.message);
+          continue;  // Skip this stock if there's an error fetching data
+        }
+      }
+
+      // Calculate total wealth using the latest price
+      if (latestPrice && latestPrice.close) {
+        totalWealth += latestPrice.close * quantity;
+      }
+    }
+
+    // If total wealth remains zero, return a warning
+    if (totalWealth === 0) {
+      console.log(`Total wealth remains zero for userId: ${userId}.`);
+      return res.status(400).json({ error: 'Total wealth could not be calculated.' });
+    }
+
+    // Create a new TotalWealth entry
+    const userWealth = new TotalWealth({
+      userId,
+      totalWealth,
+      calculationDate: new Date(),
+    });
+
+    await userWealth.save();
+    res.status(201).json({ message: 'Total wealth calculated and stored successfully', totalWealth });
+  } catch (error) {
+    console.error('Error calculating total wealth:', error);
+    res.status(500).json({ error: 'Error calculating total wealth' });
+  }
+});
+
+
+
+
+
+
+// Route to fetch the latest total wealth for a user
+app.get('/api/total-wealth/:userId', async (req, res) => {
+  const { userId } = req.params;
+
+  try {
+    const latestWealth = await TotalWealth.findOne({ userId }).sort({ calculationDate: -1 });
+
+    if (!latestWealth) {
+      console.log(`No wealth data found for userId: ${userId}`);  // Debug line
+      return res.status(404).json({ error: 'No wealth data found' });
+    }
+
+    res.status(200).json({ totalWealth: latestWealth.totalWealth });
+  } catch (error) {
+    console.error('Error fetching total wealth:', error);
+    res.status(500).json({ error: 'Error fetching total wealth' });
+  }
+});
+
+
 
 
 
