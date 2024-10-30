@@ -5,6 +5,7 @@ const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
 const Portfolio = require('./models/Portfolio');
 const DailyStockPrice = require('./models/DailyStockPrice');
+const UserProfile = require('./models/UserProfile'); // Import the new model
 
 require('dotenv').config();
 
@@ -209,7 +210,71 @@ app.get('/api/stock/latest/:ticker', async (req, res) => {
 
 
 
-  
+//User Profile routes
+// Create a new user profile
+// app.post('/api/user-profile/create', async (req, res) => {
+//   const { userId, email } = req.body;
+
+//   try {
+//     // Check if a profile already exists for the user
+//     const existingProfile = await UserProfile.findOne({ userId });
+//     if (existingProfile) {
+//       return res.status(200).json({ message: 'User profile already exists', userProfile: existingProfile });
+//     }
+
+//     // Create a new user profile if it doesn't exist
+//     const newUserProfile = new UserProfile({
+//       userId,
+//       email,
+//       firstName: '',
+//       lastName: '',
+//       phone: '',
+//       address: ''
+//     });
+
+//     await newUserProfile.save();
+//     return res.status(201).json({ message: 'User profile created successfully', userProfile: newUserProfile });
+//   } catch (error) {
+//     console.error('Error creating user profile:', error);
+//     return res.status(500).json({ error: 'Error creating user profile' });
+//   }
+// });
+
+
+app.post('/api/user-profile/create', async (req, res) => {
+  const { userId, email } = req.body;
+
+  try {
+    // Check if a profile already exists for the user
+    const existingProfile = await UserProfile.findOne({ userId });
+    if (existingProfile) {
+      return res.status(200).json({ message: 'User profile already exists', userProfile: existingProfile });
+    }
+
+    // Create a new user profile if it doesn't exist
+    const newUserProfile = new UserProfile({
+      userId,
+      email,
+      firstName: '',
+      lastName: '',
+      phone: '',
+      address: ''
+    });
+
+    // Save the new user profile
+    await newUserProfile.save();
+
+    // Also create an empty portfolio for the user
+    const newPortfolio = new Portfolio({ userId, stocks: [] });
+    await newPortfolio.save();
+
+    return res.status(201).json({ message: 'User profile and empty portfolio created successfully', userProfile: newUserProfile });
+  } catch (error) {
+    console.error('Error creating user profile or portfolio:', error);
+    return res.status(500).json({ error: 'Error creating user profile or portfolio' });
+  }
+});
+
 
 
 

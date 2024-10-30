@@ -7,7 +7,9 @@ import PrivateRoute from './components/PrivateRoute';
 import StockDetailsForm from './pages/StockDetailsForm';
 import StockDetails from './pages/StockDetails';
 
+
 function App() {
+
   return (
     <Router>
       <Routes>
