@@ -1,3 +1,73 @@
+// import { useEffect, useState } from "react";
+// import { useAuth } from "../context/UserContext";
+// import axios from "axios";
+// import { useNavigate } from "react-router-dom";
+// import Header from "../components/Header";
+// import Footer from "../components/Footer";
+// import StockCard from "../components/StockCard";
+
+// const Dashboard = () => {
+//   const { currentUser } = useAuth();
+//   const navigate = useNavigate();
+//   const [portfolio, setPortfolio] = useState([]);
+//   const [loading, setLoading] = useState(true);  // Loading state
+//   const [error, setError] = useState(null);  // Error state
+
+//   useEffect(() => {
+//     const fetchAggregatedPortfolio = async () => {
+//       try {
+//         const response = await axios.get(`/api/portfolio/aggregate/${currentUser.uid}`);
+//         setPortfolio(response.data);
+//         setLoading(false);  // Set loading to false once data is fetched
+//       } catch (error) {
+//         setLoading(false);  // Stop loading if there's an error
+//         if (error.response && error.response.status === 404) {
+//           setError('No portfolio data found.');  // Handle 404 error
+//         } else {
+//           console.error("Error fetching aggregated portfolio:", error);
+//           setError('Failed to fetch portfolio data.');
+//         }
+//       }
+//     };
+
+//     if (currentUser) {
+//       fetchAggregatedPortfolio();
+//     }
+//   }, [currentUser]);
+
+//   const handleCardClick = (ticker) => {
+//     navigate(`/stock-details/${ticker}`);
+//   };
+
+//   return (
+//     <div className="flex flex-col min-h-screen bg-gray-100">
+//       <Header setPortfolio={setPortfolio} />
+//       <main className="flex flex-col items-start justify-start flex-grow p-4">
+//         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 w-full">
+//           {loading ? (
+//             <p className="text-center">Loading portfolio data...</p>
+//           ) : error ? (
+//             <p className="text-center text-red-500">{error}</p>
+//           ) : portfolio.length > 0 ? (
+//             portfolio.map((stock, index) => (
+//               <StockCard key={index} stock={stock} onClick={() => handleCardClick(stock.ticker)} />
+//             ))
+//           ) : (
+//             <p className="text-center text-gray-600">Your portfolio is empty. Start adding stocks to track your investments!</p>
+//           )}
+//         </div>
+//       </main>
+//       <Footer />
+//     </div>
+//   );
+// };
+
+// export default Dashboard;
+
+
+
+
+
 import { useEffect, useState } from "react";
 import { useAuth } from "../context/UserContext";
 import axios from "axios";
@@ -10,28 +80,51 @@ const Dashboard = () => {
   const { currentUser } = useAuth();
   const navigate = useNavigate();
   const [portfolio, setPortfolio] = useState([]);
-  const [loading, setLoading] = useState(true);  // Loading state
-  const [error, setError] = useState(null);  // Error state
+  const [totalWealth, setTotalWealth] = useState(0);
+  const [totalProfitLoss, setTotalProfitLoss] = useState(0);
+  const [totalProfitLossPercent, setTotalProfitLossPercent] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
+  // Fetch total wealth and aggregated portfolio data
   useEffect(() => {
-    const fetchAggregatedPortfolio = async () => {
+    const fetchPortfolioAndWealth = async () => {
       try {
+        setLoading(true);
+
+        // Fetch total wealth
+        const wealthResponse = await axios.get(`/api/total-wealth/${currentUser.uid}`);
+        const fetchedTotalWealth = wealthResponse.data.totalWealth || 0;
+        setTotalWealth(fetchedTotalWealth);
+
+        // Fetch aggregated portfolio
         const response = await axios.get(`/api/portfolio/aggregate/${currentUser.uid}`);
         setPortfolio(response.data);
-        setLoading(false);  // Set loading to false once data is fetched
-      } catch (error) {
-        setLoading(false);  // Stop loading if there's an error
-        if (error.response && error.response.status === 404) {
-          setError('No portfolio data found.');  // Handle 404 error
+
+        // Calculate total cost of the portfolio
+        const totalCost = response.data.reduce((sum, stock) => sum + stock.totalCost, 0);
+
+        // Calculate profit/loss and profit/loss percentage
+        const profitLoss = fetchedTotalWealth - totalCost;
+        const profitLossPercent = totalCost > 0 ? (profitLoss / totalCost) * 100 : 0;
+
+        setTotalProfitLoss(profitLoss);
+        setTotalProfitLossPercent(profitLossPercent);
+
+        setLoading(false);
+      } catch (err) {
+        setLoading(false);
+        if (err.response && err.response.status === 404) {
+          setError("No portfolio data found.");
         } else {
-          console.error("Error fetching aggregated portfolio:", error);
-          setError('Failed to fetch portfolio data.');
+          console.error("Error fetching portfolio data:", err);
+          setError("Failed to fetch portfolio data.");
         }
       }
     };
 
     if (currentUser) {
-      fetchAggregatedPortfolio();
+      fetchPortfolioAndWealth();
     }
   }, [currentUser]);
 
@@ -43,19 +136,33 @@ const Dashboard = () => {
     <div className="flex flex-col min-h-screen bg-gray-100">
       <Header setPortfolio={setPortfolio} />
       <main className="flex flex-col items-start justify-start flex-grow p-4">
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 w-full">
-          {loading ? (
-            <p className="text-center">Loading portfolio data...</p>
-          ) : error ? (
-            <p className="text-center text-red-500">{error}</p>
-          ) : portfolio.length > 0 ? (
-            portfolio.map((stock, index) => (
-              <StockCard key={index} stock={stock} onClick={() => handleCardClick(stock.ticker)} />
-            ))
-          ) : (
-            <p className="text-center text-gray-600">Your portfolio is empty. Start adding stocks to track your investments!</p>
-          )}
-        </div>
+        {loading ? (
+          <p className="text-center">Loading portfolio data...</p>
+        ) : error ? (
+          <p className="text-center text-red-500">{error}</p>
+        ) : (
+          <>
+            <div className="mb-4">
+              <h2 className="text-2xl font-bold">Portfolio Overview</h2>
+              <p>
+                <strong>Total Wealth:</strong> ${totalWealth.toLocaleString("en-US", { minimumFractionDigits: 2 })}
+              </p>
+              <p className={totalProfitLoss >= 0 ? "text-green-600" : "text-red-600"}>
+                <strong>Total Profit/Loss:</strong> ${totalProfitLoss.toLocaleString("en-US", { minimumFractionDigits: 2 })} 
+                ({totalProfitLossPercent.toFixed(2)}%)
+              </p>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 w-full">
+              {portfolio.length > 0 ? (
+                portfolio.map((stock, index) => (
+                  <StockCard key={index} stock={stock} onClick={() => handleCardClick(stock.ticker)} />
+                ))
+              ) : (
+                <p className="text-center text-gray-600">Your portfolio is empty. Start adding stocks to track your investments!</p>
+              )}
+            </div>
+          </>
+        )}
       </main>
       <Footer />
     </div>
