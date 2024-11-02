@@ -1,21 +1,16 @@
 import pandas as pd
 
-# Sample dataset with text and a target label
+# Mock dataset with sentiment scores and labels for price movement
 data = {
-    'text': [
-        "Company reports record profits, stock expected to rise",
-        "New product launch boosts company outlook",
-        "CEO steps down amid controversy, shares fall",
-        "Market downturn impacts tech sector, stock prices drop",
-        "Positive earnings report exceeds expectations, stock soars"
-    ],
-    'label': [1, 1, 0, 0, 1]  # 1 for price increase, 0 for decrease
+    'overall_sentiment_score': [0.2, 0.5, -0.3, -0.1, 0.4],
+    'ticker_sentiment_score': [0.15, 0.6, -0.25, -0.15, 0.35],
+    'price_movement': [1, 1, 0, 0, 1]  # 1 for price increase, 0 for decrease
 }
 
 # Create a DataFrame
 df = pd.DataFrame(data)
 
 # Save the dataset to a CSV file
-df.to_csv('sample_news_data.csv', index=False)
+df.to_csv('price_movement_data.csv', index=False)
 
-print("Sample dataset created and saved as sample_news_data.csv")
+print("Price movement dataset created and saved as price_movement_data.csv")

@@ -1,0 +1,6 @@
+overall_sentiment_score,ticker_sentiment_score,price_movement
+0.2,0.15,1
+0.5,0.6,1
+-0.3,-0.25,0
+-0.1,-0.15,0
+0.4,0.35,1
