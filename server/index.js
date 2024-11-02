@@ -45,27 +45,6 @@ app.get('/api/search/:query', async (req, res) => {
 
 
 // Route to add a stock to a user's portfolio
-// app.post('/api/portfolio/add', async (req, res) => {
-//     console.log(req.body);
-//     const { userId, stock } = req.body;
-  
-//     try {
-//         let portfolio = await Portfolio.findOne({ userId });
-
-//         if (!portfolio) {
-//             portfolio = new Portfolio({ userId, stocks: [stock] });
-//         } else {
-//             portfolio.stocks.push(stock);
-//         }
-
-//         await portfolio.save();
-//         res.json({ message: 'Stock added to portfolio' });
-//     } catch (error) {
-//         console.error('Error adding stock to portfolio:', error);
-//         res.status(500).json({ error: 'Error adding stock to portfolio' });
-//     }
-// });
-
 app.post('/api/portfolio/add', async (req, res) => {
   const { userId, stock } = req.body;
 
@@ -276,83 +255,6 @@ app.post('/api/user-profile/create', async (req, res) => {
 });
 
 
-
-
-// Route to calculate and save user total wealth
-// app.post('/api/total-wealth/update', async (req, res) => {
-//   const { userId } = req.body;
-//   const apiKey = process.env.TIINGO_API_KEY;
-
-//   try {
-//     // Fetch the user's portfolio
-//     const portfolio = await Portfolio.findOne({ userId });
-//     if (!portfolio || portfolio.stocks.length === 0) {
-//       return res.status(404).json({ error: 'No portfolio found or portfolio is empty' });
-//     }
-
-//     // Calculate total wealth
-//     let totalWealth = 0;
-//     for (const stock of portfolio.stocks) {
-//       const { ticker, quantity } = stock;
-
-//       // Fetch the latest stock price from the DailyStockPrice collection
-//       let latestPrice = await DailyStockPrice.findOne({ ticker }).sort({ date: -1 });
-
-//       // If there's no price data, fetch from Tiingo
-//       if (!latestPrice) {
-//         console.log(`No local price data found for ${ticker}, fetching from Tiingo...`);
-
-//         try {
-//           const response = await axios.get(`https://api.tiingo.com/tiingo/daily/${ticker}/prices`, {
-//             headers: {
-//               'Content-Type': 'application/json',
-//               'Authorization': `Token ${apiKey}`,
-//             },
-//           });
-
-//           if (response.data && response.data.length > 0) {
-//             const { open, close } = response.data[0];  // Take the most recent price data
-//             latestPrice = new DailyStockPrice({ ticker, open, close, date: new Date() });
-//             await latestPrice.save();  // Save the fetched price to the database
-//             console.log(`Price data saved for ${ticker}.`);
-//           } else {
-//             console.log(`No price data found for ${ticker} from Tiingo.`);
-//             continue;  // Skip this stock if no data is found
-//           }
-//         } catch (apiError) {
-//           console.error(`Error fetching price for ${ticker} from Tiingo:`, apiError.message);
-//           continue;  // Skip this stock if there's an error fetching data
-//         }
-//       }
-
-//       // Calculate total wealth using the latest price
-//       if (latestPrice && latestPrice.close) {
-//         totalWealth += latestPrice.close * quantity;
-//       }
-//     }
-
-//     // If total wealth remains zero, return a warning
-//     if (totalWealth === 0) {
-//       console.log(`Total wealth remains zero for userId: ${userId}.`);
-//       return res.status(400).json({ error: 'Total wealth could not be calculated.' });
-//     }
-
-//     // Create a new TotalWealth entry
-//     const userWealth = new TotalWealth({
-//       userId,
-//       totalWealth,
-//       calculationDate: new Date(),
-//     });
-
-//     await userWealth.save();
-//     res.status(201).json({ message: 'Total wealth calculated and stored successfully', totalWealth });
-//   } catch (error) {
-//     console.error('Error calculating total wealth:', error);
-//     res.status(500).json({ error: 'Error calculating total wealth' });
-//   }
-// });
-
-
 // Route to calculate and save user total wealth
 app.post('/api/total-wealth/update', async (req, res) => {
   const { userId } = req.body;
@@ -442,11 +344,6 @@ app.post('/api/total-wealth/update', async (req, res) => {
     res.status(500).json({ error: 'Error calculating total wealth' });
   }
 });
-
-
-
-
-
 
 
 // Route to fetch the latest total wealth for a user
