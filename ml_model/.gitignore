@@ -1,4 +1,7 @@
 .env
 
+.csv
+
 # Ignore sentiment data files
 historical_sentiment_data.csv
+

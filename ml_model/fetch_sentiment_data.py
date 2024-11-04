@@ -14,7 +14,8 @@ news_data = []
 
 # Set date range: Start 2 years back from today
 end_date = datetime.now()
-start_date = end_date - timedelta(days=730)  # 2 years ago
+# start_date = end_date - timedelta(days=730)  # 2 years ago
+start_date = end_date - timedelta(days=1095)  # 3 years ago
 
 # Deduplication set to store unique timestamps
 fetched_dates = set()
@@ -94,7 +95,7 @@ df = pd.DataFrame(news_data)
 df = df.sort_values(by="time_published", ascending=False)
 
 # Save DataFrame to csv file - option 1
-df.to_csv("historical_sentiment_data.csv", index=False)
+df.to_csv("historical_sentiment_data_AAPL.csv", index=False)
 
 # Save DataFrame to csv file - option 2 (This avoids duplicate headers if the script is run multiple times)
 # df.to_csv("historical_sentiment_data.csv", mode="a", header=not os.path.exists("historical_sentiment_data.csv"), index=False)
