@@ -170,8 +170,8 @@ load_dotenv()
 api_key = os.getenv("ALPHA_VANTAGE_API_KEY")
 
 # List of tickers to fetch data for
-# tickers = ["AAPL", "MSFT", "META", "BAC", "WFC", "C", "JNJ", "PFE", "AMZN", "TSLA", "PG", "KO", "BA", "CAT", "XOM", "CVX", "NEE", "AMT", "DIS", "T"]
-tickers = ["AAPL"]
+tickers = ["AAPL", "MSFT", "META", "BAC", "WFC", "C", "JNJ", "PFE", "AMZN", "TSLA", "PG", "KO", "BA", "CAT", "XOM", "CVX", "NEE", "AMT", "DIS", "T"]
+# tickers = ["AAPL"]
 
 base_url = "https://www.alphavantage.co/query"
 
@@ -219,7 +219,7 @@ def fetch_price_data(ticker):
         print(f"Fetched {len(price_data)} price entries for {ticker}")
 
         # Respect API call limits
-        time.sleep(1)
+        # time.sleep(1)
 
     except requests.exceptions.RequestException as e:
         print(f"An error occurred for {ticker}: {e}")

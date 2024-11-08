@@ -250,7 +250,7 @@ api_key = os.getenv("ALPHA_VANTAGE_API_KEY")
 
 # List of tickers from different sectors
 # tickers = ["AAPL", "MSFT", "META", "BAC", "WFC", "C", "JNJ", "PFE", "AMZN", "TSLA", "PG", "KO", "BA", "CAT", "XOM", "CVX", "NEE", "AMT", "DIS", "T"]
-tickers = ["AAPL"]
+tickers = ["META"]
 
 # Define sectors for each ticker
 sector_mapping = {
