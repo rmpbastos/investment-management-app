@@ -136,6 +136,9 @@
 
 
 
+# ===================== 0.92 acc =====================
+# ===================== 0.92 acc =====================
+# ===================== 0.92 acc =====================
 import pandas as pd
 import numpy as np
 import os
@@ -144,6 +147,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import classification_report, confusion_matrix
 from imblearn.combine import SMOTEENN
 from sklearn.preprocessing import StandardScaler
+import joblib
 
 # Define file paths
 training_data_file = os.path.join("..", "data", "training_data", "combined_training_data.csv")
@@ -159,7 +163,8 @@ data.dropna(inplace=True)
 
 # Define features (X) and target (y)
 print("Defining features and target...")
-features = data.drop(columns=['date', 'price_movement'])
+# Drop non-numeric columns and use encoded columns instead
+features = data.drop(columns=['date', 'price_movement', 'ticker', 'sector'])
 target = data['price_movement']
 
 # Standardize the features
@@ -198,7 +203,6 @@ model = xgb.XGBClassifier(
     subsample=0.8,
     colsample_bytree=1.0,
     random_state=42,
-    use_label_encoder=False,
     eval_metric='mlogloss'
 )
 
@@ -225,5 +229,12 @@ print(confusion_matrix(y_test, y_pred))
 
 # Save the trained model
 print("Saving the model...")
-model.save_model(model_output_file)
+
+# Save the model as .joblib (Python-specific format)
+joblib.dump(model, model_output_file)
 print(f"Model saved to {model_output_file}")
+
+# Also save the model as .json (portable format)
+json_output_file = model_output_file.replace(".joblib", ".json")
+model.save_model(json_output_file)
+print(f"Model saved to {json_output_file}")
