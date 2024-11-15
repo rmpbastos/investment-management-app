@@ -594,218 +594,6 @@
 
 // Added Sell Stock button
 
-// import React, { useEffect, useState, useCallback } from "react";
-// import { useNavigate } from "react-router-dom";
-
-// const StockCard = ({ stock, onClick }) => {
-//   const {
-//     name,
-//     ticker,
-//     assetType,
-//     totalQuantity,
-//     averagePurchasePrice,
-//     totalCost,
-//   } = stock;
-
-//   const navigate = useNavigate();
-
-//   // State for latest prices and sentiment
-//   const [latestPrice, setLatestPrice] = useState({
-//     open: null,
-//     high: null,
-//     low: null,
-//     close: null,
-//     adjusted_close: null,
-//     volume: null,
-//     dividend_amount: null,
-//     split_coefficient: null,
-//   });
-//   const [overallSentiment, setOverallSentiment] = useState(0);
-//   const [tickerSentiment, setTickerSentiment] = useState(0);
-//   const [prediction, setPrediction] = useState(null);
-
-//   // Cache for fetched data
-//   const sentimentCache = new Map();
-//   const priceCache = new Map();
-
-//   // Fetch sentiment data
-//   const fetchSentimentData = useCallback(async () => {
-//     if (sentimentCache.has(ticker)) {
-//       const cachedSentiment = sentimentCache.get(ticker);
-//       setOverallSentiment(cachedSentiment.overallSentiment);
-//       setTickerSentiment(cachedSentiment.tickerSentiment);
-//       return;
-//     }
-
-//     const apiKey = process.env.REACT_APP_ALPHA_VANTAGE_API_KEY;
-//     try {
-//       console.log(`Fetching sentiment data for ${ticker}...`);
-//       const response = await fetch(
-//         `https://www.alphavantage.co/query?function=NEWS_SENTIMENT&tickers=${ticker}&apikey=${apiKey}`
-//       );
-//       const data = await response.json();
-
-//       if (data.feed && data.feed.length > 0) {
-//         const latestArticle = data.feed[0];
-//         const overallSentimentScore =
-//           parseFloat(latestArticle.overall_sentiment_score) || 0;
-//         const tickerSentimentScore =
-//           parseFloat(
-//             latestArticle.ticker_sentiment?.[0]?.ticker_sentiment_score
-//           ) || 0;
-
-//         setOverallSentiment(overallSentimentScore);
-//         setTickerSentiment(tickerSentimentScore);
-//         sentimentCache.set(ticker, {
-//           overallSentiment: overallSentimentScore,
-//           tickerSentiment: tickerSentimentScore,
-//         });
-//       } else {
-//         setOverallSentiment(0);
-//         setTickerSentiment(0);
-//       }
-//     } catch (err) {
-//       console.error("Error fetching sentiment data:", err);
-//       setOverallSentiment(0);
-//       setTickerSentiment(0);
-//     }
-//   }, [ticker]);
-
-//   // Fetch price data
-//   const fetchPriceData = useCallback(async () => {
-//     if (priceCache.has(ticker)) {
-//       setLatestPrice(priceCache.get(ticker));
-//       return;
-//     }
-
-//     const apiKey = process.env.REACT_APP_ALPHA_VANTAGE_API_KEY;
-//     try {
-//       const response = await fetch(
-//         `https://www.alphavantage.co/query?function=TIME_SERIES_DAILY_ADJUSTED&symbol=${ticker}&apikey=${apiKey}`
-//       );
-//       const data = await response.json();
-
-//       if (data["Time Series (Daily)"]) {
-//         const latestDate = Object.keys(data["Time Series (Daily)"])[0];
-//         const latestData = data["Time Series (Daily)"][latestDate];
-
-//         const priceData = {
-//           open: parseFloat(latestData["1. open"]),
-//           high: parseFloat(latestData["2. high"]),
-//           low: parseFloat(latestData["3. low"]),
-//           close: parseFloat(latestData["4. close"]),
-//           adjusted_close: parseFloat(latestData["5. adjusted close"]),
-//           volume: parseInt(latestData["6. volume"]),
-//           dividend_amount: parseFloat(latestData["7. dividend amount"]),
-//           split_coefficient: parseFloat(latestData["8. split coefficient"]),
-//         };
-
-//         setLatestPrice(priceData);
-//         priceCache.set(ticker, priceData);
-//       } else {
-//         setLatestPrice({});
-//       }
-//     } catch (err) {
-//       console.error("Error fetching price data:", err);
-//       setLatestPrice({});
-//     }
-//   }, [ticker]);
-
-//   // Fetch prediction
-//   const fetchPrediction = useCallback(async () => {
-//     try {
-//       const predictionPayload = {
-//         overall_sentiment_score: parseFloat(overallSentiment),
-//         ticker_sentiment_score: parseFloat(tickerSentiment),
-//         open: parseFloat(latestPrice.open),
-//         high: parseFloat(latestPrice.high),
-//         low: parseFloat(latestPrice.low),
-//         close: parseFloat(latestPrice.close),
-//         adjusted_close: parseFloat(latestPrice.adjusted_close),
-//         volume: parseInt(latestPrice.volume),
-//         dividend_amount: parseFloat(latestPrice.dividend_amount),
-//         split_coefficient: parseFloat(latestPrice.split_coefficient),
-//       };
-
-//       const response = await fetch("/api/predict", {
-//         method: "POST",
-//         headers: {
-//           "Content-Type": "application/json",
-//         },
-//         body: JSON.stringify(predictionPayload),
-//       });
-
-//       const data = await response.json();
-//       setPrediction(data.prediction);
-//     } catch (err) {
-//       console.error("Error fetching prediction:", err);
-//       setPrediction("Error");
-//     }
-//   }, [overallSentiment, tickerSentiment, latestPrice]);
-
-//   useEffect(() => {
-//     if (ticker) {
-//       fetchSentimentData();
-//       fetchPriceData();
-//     }
-//   }, [ticker, fetchSentimentData, fetchPriceData]);
-
-//   useEffect(() => {
-//     if (
-//       overallSentiment !== null &&
-//       tickerSentiment !== null &&
-//       latestPrice.close !== null
-//     ) {
-//       fetchPrediction();
-//     }
-//   }, [overallSentiment, tickerSentiment, latestPrice, fetchPrediction]);
-
-//   const stockValue = totalQuantity * (latestPrice.close || 0);
-//   const profitLoss = stockValue - totalCost;
-//   const profitLossPercent = totalCost > 0 ? (profitLoss / totalCost) * 100 : 0;
-
-//   // Handle click for the "Sell" button
-//   const handleSellClick = () => {
-//     navigate(`/sell-stock`, {
-//       state: {
-//         ticker,
-//         name,
-//         totalQuantity,
-//         averagePurchasePrice,
-//         totalCost,
-//       },
-//     });
-//   };
-
-//   return (
-//     <div className="bg-white shadow-md rounded p-4 cursor-pointer hover:shadow-lg transition-shadow" onClick={onClick}>
-//       <h3 className="text-xl font-bold mb-2">
-//         {name} ({ticker})
-//       </h3>
-//       <p><strong>Asset Type:</strong> {assetType}</p>
-//       <p><strong>Total Quantity:</strong> {totalQuantity || 0}</p>
-//       <p><strong>Average Purchase Price:</strong> ${averagePurchasePrice.toFixed(2)}</p>
-//       <p><strong>Total Cost:</strong> ${totalCost.toFixed(2)}</p>
-//       <p className={profitLoss >= 0 ? "text-green-600" : "text-red-600"}>
-//         <strong>Profit/Loss:</strong> ${profitLoss.toFixed(2)} ({profitLossPercent.toFixed(2)}%)
-//       </p>
-//       <p><strong>Predicted Movement:</strong> {prediction || "Loading..."}</p>
-//       <button
-//         className="bg-red-500 text-white py-1 px-3 rounded hover:bg-red-600 transition duration-300 mt-4"
-//         onClick={handleSellClick}
-//       >
-//         Sell Stock
-//       </button>
-//     </div>
-//   );
-// };
-
-// export default StockCard;
-
-
-
-
-
 import React, { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -821,14 +609,167 @@ const StockCard = ({ stock, onClick }) => {
 
   const navigate = useNavigate();
 
-  // Handle click for the "Sell Stock" button
-  const handleSellClick = (e) => {
-    e.stopPropagation(); // Prevent card click event
-    navigate("/sell-stock", {
+  // State for latest prices and sentiment
+  const [latestPrice, setLatestPrice] = useState({
+    open: null,
+    high: null,
+    low: null,
+    close: null,
+    adjusted_close: null,
+    volume: null,
+    dividend_amount: null,
+    split_coefficient: null,
+  });
+  const [overallSentiment, setOverallSentiment] = useState(0);
+  const [tickerSentiment, setTickerSentiment] = useState(0);
+  const [prediction, setPrediction] = useState(null);
+
+  // Cache for fetched data
+  const sentimentCache = new Map();
+  const priceCache = new Map();
+
+  // Fetch sentiment data
+  const fetchSentimentData = useCallback(async () => {
+    if (sentimentCache.has(ticker)) {
+      const cachedSentiment = sentimentCache.get(ticker);
+      setOverallSentiment(cachedSentiment.overallSentiment);
+      setTickerSentiment(cachedSentiment.tickerSentiment);
+      return;
+    }
+
+    const apiKey = process.env.REACT_APP_ALPHA_VANTAGE_API_KEY;
+    try {
+      console.log(`Fetching sentiment data for ${ticker}...`);
+      const response = await fetch(
+        `https://www.alphavantage.co/query?function=NEWS_SENTIMENT&tickers=${ticker}&apikey=${apiKey}`
+      );
+      const data = await response.json();
+
+      if (data.feed && data.feed.length > 0) {
+        const latestArticle = data.feed[0];
+        const overallSentimentScore =
+          parseFloat(latestArticle.overall_sentiment_score) || 0;
+        const tickerSentimentScore =
+          parseFloat(
+            latestArticle.ticker_sentiment?.[0]?.ticker_sentiment_score
+          ) || 0;
+
+        setOverallSentiment(overallSentimentScore);
+        setTickerSentiment(tickerSentimentScore);
+        sentimentCache.set(ticker, {
+          overallSentiment: overallSentimentScore,
+          tickerSentiment: tickerSentimentScore,
+        });
+      } else {
+        setOverallSentiment(0);
+        setTickerSentiment(0);
+      }
+    } catch (err) {
+      console.error("Error fetching sentiment data:", err);
+      setOverallSentiment(0);
+      setTickerSentiment(0);
+    }
+  }, [ticker]);
+
+  // Fetch price data
+  const fetchPriceData = useCallback(async () => {
+    if (priceCache.has(ticker)) {
+      setLatestPrice(priceCache.get(ticker));
+      return;
+    }
+
+    const apiKey = process.env.REACT_APP_ALPHA_VANTAGE_API_KEY;
+    try {
+      const response = await fetch(
+        `https://www.alphavantage.co/query?function=TIME_SERIES_DAILY_ADJUSTED&symbol=${ticker}&apikey=${apiKey}`
+      );
+      const data = await response.json();
+
+      if (data["Time Series (Daily)"]) {
+        const latestDate = Object.keys(data["Time Series (Daily)"])[0];
+        const latestData = data["Time Series (Daily)"][latestDate];
+
+        const priceData = {
+          open: parseFloat(latestData["1. open"]),
+          high: parseFloat(latestData["2. high"]),
+          low: parseFloat(latestData["3. low"]),
+          close: parseFloat(latestData["4. close"]),
+          adjusted_close: parseFloat(latestData["5. adjusted close"]),
+          volume: parseInt(latestData["6. volume"]),
+          dividend_amount: parseFloat(latestData["7. dividend amount"]),
+          split_coefficient: parseFloat(latestData["8. split coefficient"]),
+        };
+
+        setLatestPrice(priceData);
+        priceCache.set(ticker, priceData);
+      } else {
+        setLatestPrice({});
+      }
+    } catch (err) {
+      console.error("Error fetching price data:", err);
+      setLatestPrice({});
+    }
+  }, [ticker]);
+
+  // Fetch prediction
+  const fetchPrediction = useCallback(async () => {
+    try {
+      const predictionPayload = {
+        overall_sentiment_score: parseFloat(overallSentiment),
+        ticker_sentiment_score: parseFloat(tickerSentiment),
+        open: parseFloat(latestPrice.open),
+        high: parseFloat(latestPrice.high),
+        low: parseFloat(latestPrice.low),
+        close: parseFloat(latestPrice.close),
+        adjusted_close: parseFloat(latestPrice.adjusted_close),
+        volume: parseInt(latestPrice.volume),
+        dividend_amount: parseFloat(latestPrice.dividend_amount),
+        split_coefficient: parseFloat(latestPrice.split_coefficient),
+      };
+
+      const response = await fetch("/api/predict", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(predictionPayload),
+      });
+
+      const data = await response.json();
+      setPrediction(data.prediction);
+    } catch (err) {
+      console.error("Error fetching prediction:", err);
+      setPrediction("Error");
+    }
+  }, [overallSentiment, tickerSentiment, latestPrice]);
+
+  useEffect(() => {
+    if (ticker) {
+      fetchSentimentData();
+      fetchPriceData();
+    }
+  }, [ticker, fetchSentimentData, fetchPriceData]);
+
+  useEffect(() => {
+    if (
+      overallSentiment !== null &&
+      tickerSentiment !== null &&
+      latestPrice.close !== null
+    ) {
+      fetchPrediction();
+    }
+  }, [overallSentiment, tickerSentiment, latestPrice, fetchPrediction]);
+
+  const stockValue = totalQuantity * (latestPrice.close || 0);
+  const profitLoss = stockValue - totalCost;
+  const profitLossPercent = totalCost > 0 ? (profitLoss / totalCost) * 100 : 0;
+
+  // Handle click for the "Sell" button
+  const handleSellClick = () => {
+    navigate(`/sell-stock`, {
       state: {
         ticker,
         name,
-        assetType,
         totalQuantity,
         averagePurchasePrice,
         totalCost,
@@ -837,26 +778,18 @@ const StockCard = ({ stock, onClick }) => {
   };
 
   return (
-    <div
-      className="bg-white shadow-md rounded p-4 cursor-pointer hover:shadow-lg transition-shadow"
-      onClick={onClick}
-    >
+    <div className="bg-white shadow-md rounded p-4 cursor-pointer hover:shadow-lg transition-shadow" onClick={onClick}>
       <h3 className="text-xl font-bold mb-2">
         {name} ({ticker})
       </h3>
-      <p>
-        <strong>Asset Type:</strong> {assetType}
+      <p><strong>Asset Type:</strong> {assetType}</p>
+      <p><strong>Total Quantity:</strong> {totalQuantity || 0}</p>
+      <p><strong>Average Purchase Price:</strong> ${averagePurchasePrice.toFixed(2)}</p>
+      <p><strong>Total Cost:</strong> ${totalCost.toFixed(2)}</p>
+      <p className={profitLoss >= 0 ? "text-green-600" : "text-red-600"}>
+        <strong>Profit/Loss:</strong> ${profitLoss.toFixed(2)} ({profitLossPercent.toFixed(2)}%)
       </p>
-      <p>
-        <strong>Total Quantity:</strong> {totalQuantity || 0}
-      </p>
-      <p>
-        <strong>Average Purchase Price:</strong> $
-        {averagePurchasePrice.toFixed(2)}
-      </p>
-      <p>
-        <strong>Total Cost:</strong> ${totalCost.toFixed(2)}
-      </p>
+      <p><strong>Predicted Movement:</strong> {prediction || "Loading..."}</p>
       <button
         className="bg-red-500 text-white py-1 px-3 rounded hover:bg-red-600 transition duration-300 mt-4"
         onClick={handleSellClick}
@@ -868,3 +801,70 @@ const StockCard = ({ stock, onClick }) => {
 };
 
 export default StockCard;
+
+
+
+
+
+// import React, { useEffect, useState, useCallback } from "react";
+// import { useNavigate } from "react-router-dom";
+
+// const StockCard = ({ stock, onClick }) => {
+//   const {
+//     name,
+//     ticker,
+//     assetType,
+//     totalQuantity,
+//     averagePurchasePrice,
+//     totalCost,
+//   } = stock;
+
+//   const navigate = useNavigate();
+
+//   // Handle click for the "Sell Stock" button
+//   const handleSellClick = (e) => {
+//     e.stopPropagation(); // Prevent card click event
+//     navigate("/sell-stock", {
+//       state: {
+//         ticker,
+//         name,
+//         assetType,
+//         totalQuantity,
+//         averagePurchasePrice,
+//         totalCost,
+//       },
+//     });
+//   };
+
+//   return (
+//     <div
+//       className="bg-white shadow-md rounded p-4 cursor-pointer hover:shadow-lg transition-shadow"
+//       onClick={onClick}
+//     >
+//       <h3 className="text-xl font-bold mb-2">
+//         {name} ({ticker})
+//       </h3>
+//       <p>
+//         <strong>Asset Type:</strong> {assetType}
+//       </p>
+//       <p>
+//         <strong>Total Quantity:</strong> {totalQuantity || 0}
+//       </p>
+//       <p>
+//         <strong>Average Purchase Price:</strong> $
+//         {averagePurchasePrice.toFixed(2)}
+//       </p>
+//       <p>
+//         <strong>Total Cost:</strong> ${totalCost.toFixed(2)}
+//       </p>
+//       <button
+//         className="bg-red-500 text-white py-1 px-3 rounded hover:bg-red-600 transition duration-300 mt-4"
+//         onClick={handleSellClick}
+//       >
+//         Sell Stock
+//       </button>
+//     </div>
+//   );
+// };
+
+// export default StockCard;
