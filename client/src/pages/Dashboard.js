@@ -209,6 +209,7 @@ import { useNavigate } from "react-router-dom";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import StockCard from "../components/StockCard";
+import PortfolioPieChart from "../components/PortfolioPieChart";
 
 const Dashboard = () => {
   const { currentUser } = useAuth();
@@ -330,62 +331,129 @@ const Dashboard = () => {
   };
 
   return (
+    // <div className="flex flex-col min-h-screen bg-gray-100">
+    //   <Header setPortfolio={setPortfolio} />
+    //   <main className="flex flex-col items-start justify-start flex-grow p-4">
+    //     {loading ? (
+    //       <p className="text-center">Loading portfolio data...</p>
+    //     ) : error ? (
+    //       <p className="text-center text-red-500">{error}</p>
+    //     ) : (
+    //       <>
+    //         <div className="mb-4">
+    //           <h2 className="text-2xl font-bold">Portfolio Overview</h2>
+    //           <p>
+    //             <strong>Total Wealth:</strong> $
+    //             {totalWealth.toLocaleString("en-US", {
+    //               minimumFractionDigits: 2,
+    //             })}
+    //           </p>
+    //           <p>
+    //             <strong>Total Invested:</strong> $
+    //             {totalInvested.toLocaleString("en-US", {
+    //               minimumFractionDigits: 2,
+    //             })}
+    //           </p>
+    //           <p
+    //             className={
+    //               totalProfitLoss >= 0 ? "text-green-600" : "text-red-600"
+    //             }
+    //           >
+    //             <strong>Total Profit/Loss:</strong> $
+    //             {totalProfitLoss.toLocaleString("en-US", {
+    //               minimumFractionDigits: 2,
+    //             })}
+    //             ({totalProfitLossPercent.toFixed(2)}%)
+    //           </p>
+    //         </div>
+    //         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 w-full">
+    //           {portfolio.length > 0 ? (
+    //             portfolio.map((stock, index) => (
+                  
+    //               <StockCard
+    //                 key={index}
+    //                 stock={stock}
+    //                 onClick={() => handleCardClick(stock.ticker)}
+    //               />
+    //             ))
+    //           ) : (
+    //             <p className="text-center text-gray-600">
+    //               Your portfolio is empty. Start adding stocks to track your
+    //               investments!
+    //             </p>
+    //           )}
+    //         </div>
+    //       </>
+    //     )}
+    //   </main>
+    //   <Footer />
+    // </div>
     <div className="flex flex-col min-h-screen bg-gray-100">
-      <Header setPortfolio={setPortfolio} />
-      <main className="flex flex-col items-start justify-start flex-grow p-4">
-        {loading ? (
-          <p className="text-center">Loading portfolio data...</p>
-        ) : error ? (
-          <p className="text-center text-red-500">{error}</p>
-        ) : (
-          <>
-            <div className="mb-4">
-              <h2 className="text-2xl font-bold">Portfolio Overview</h2>
-              <p>
-                <strong>Total Wealth:</strong> $
-                {totalWealth.toLocaleString("en-US", {
-                  minimumFractionDigits: 2,
-                })}
-              </p>
-              <p>
-                <strong>Total Invested:</strong> $
-                {totalInvested.toLocaleString("en-US", {
-                  minimumFractionDigits: 2,
-                })}
-              </p>
-              <p
-                className={
-                  totalProfitLoss >= 0 ? "text-green-600" : "text-red-600"
-                }
-              >
-                <strong>Total Profit/Loss:</strong> $
-                {totalProfitLoss.toLocaleString("en-US", {
-                  minimumFractionDigits: 2,
-                })}
-                ({totalProfitLossPercent.toFixed(2)}%)
-              </p>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 w-full">
-              {portfolio.length > 0 ? (
-                portfolio.map((stock, index) => (
-                  <StockCard
-                    key={index}
-                    stock={stock}
-                    onClick={() => handleCardClick(stock.ticker)}
-                  />
-                ))
-              ) : (
-                <p className="text-center text-gray-600">
-                  Your portfolio is empty. Start adding stocks to track your
-                  investments!
-                </p>
-              )}
-            </div>
-          </>
-        )}
-      </main>
-      <Footer />
-    </div>
+  <Header setPortfolio={setPortfolio} />
+  <main className="flex flex-col items-start justify-start flex-grow p-4">
+    {loading ? (
+      <p className="text-center">Loading portfolio data...</p>
+    ) : error ? (
+      <p className="text-center text-red-500">{error}</p>
+    ) : (
+      <>
+        <div className="mb-4">
+          <h2 className="text-2xl font-bold">Portfolio Overview</h2>
+          <p>
+            <strong>Total Wealth:</strong> $
+            {totalWealth.toLocaleString("en-US", {
+              minimumFractionDigits: 2,
+            })}
+          </p>
+          <p>
+            <strong>Total Invested:</strong> $
+            {totalInvested.toLocaleString("en-US", {
+              minimumFractionDigits: 2,
+            })}
+          </p>
+          <p
+            className={
+              totalProfitLoss >= 0 ? "text-green-600" : "text-red-600"
+            }
+          >
+            <strong>Total Profit/Loss:</strong> $
+            {totalProfitLoss.toLocaleString("en-US", {
+              minimumFractionDigits: 2,
+            })}
+            ({totalProfitLossPercent.toFixed(2)}%)
+          </p>
+        </div>
+
+        {/* <div className="flex justify-center items-center w-full lg:w-1/2 h-80 mb-4">
+          <PortfolioPieChart portfolio={portfolio} />
+        </div> */}
+        <div className="chart-container flex justify-left items-center w-full lg:w-1/2 h-80 mb-8">
+          <PortfolioPieChart portfolio={portfolio} />
+        </div>
+
+
+        {/* Stock Cards Section */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 w-full">
+          {portfolio.length > 0 ? (
+            portfolio.map((stock, index) => (
+              <StockCard
+                key={index}
+                stock={stock}
+                onClick={() => handleCardClick(stock.ticker)}
+              />
+            ))
+          ) : (
+            <p className="text-center text-gray-600">
+              Your portfolio is empty. Start adding stocks to track your investments!
+            </p>
+          )}
+        </div>
+      </>
+    )}
+  </main>
+  <Footer />
+</div>
+
   );
 };
 

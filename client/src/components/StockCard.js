@@ -609,6 +609,29 @@ const StockCard = ({ stock, onClick }) => {
 
   const navigate = useNavigate();
 
+  //   // Fetch latest prices from the backend
+//   useEffect(() => {
+//     const fetchLatestPrice = async () => {
+//       try {
+//         const response = await fetch(`/api/stock/latest/${ticker}`);
+//         const data = await response.json();
+
+//         if (response.ok) {
+//           setLatestPrice({ open: data.open, close: data.close });
+//         } else {
+//           setError(data.error || "Failed to fetch latest price");
+//         }
+//       } catch (err) {
+//         setError("Error fetching latest price");
+//         console.error(err);
+//       }
+//     };
+
+//     if (ticker) {
+//       fetchLatestPrice();
+//     }
+//   }, [ticker]);
+
   // State for latest prices and sentiment
   const [latestPrice, setLatestPrice] = useState({
     open: null,
