@@ -369,19 +369,26 @@ app.get('/api/total-wealth/:userId', async (req, res) => {
 
 
 // ******************** FLASK API TEST ********************
-// New route to forward prediction requests to Flask
+// Route to forward prediction requests to Flask
 app.post('/api/predict', async (req, res) => {
   try {
-      // Send request to Flask server at port 5001
-      const response = await axios.post('http://127.0.0.1:5001/predict', req.body);
-      
-      // Forward the Flask response back to the client
-      res.json(response.data);
+    // Forward the request body directly to the Flask API
+    const flaskResponse = await axios.post('http://127.0.0.1:5001/predict', req.body);
+
+    // Send the Flask response back to the frontend
+    res.status(200).json(flaskResponse.data);
   } catch (error) {
-      console.error('Error communicating with Flask API:', error.message);
-      res.status(500).send('Error communicating with Flask API');
+    console.error('Error communicating with Flask API:', error.message);
+
+    // Send a detailed error response
+    res.status(500).json({
+      error: 'Error communicating with Flask API',
+      message: error.message,
+      stack: error.stack || null,
+    });
   }
 });
+
 
 
 
