@@ -1,21 +1,25 @@
-import './App.css';
-import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
-import Signup from './pages/Signup';
-import Login from './pages/Login';
-import Dashboard from './pages/Dashboard';
-import PrivateRoute from './components/PrivateRoute';
-import StockDetailsForm from './pages/StockDetailsForm';
-import StockDetails from './pages/StockDetails';
-
+import "./App.css";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+} from "react-router-dom";
+import Signup from "./pages/Signup";
+import Login from "./pages/Login";
+import Dashboard from "./pages/Dashboard";
+import PrivateRoute from "./components/PrivateRoute";
+import StockDetailsForm from "./pages/StockDetailsForm";
+import StockDetails from "./pages/StockDetails";
+import SellStockForm from "./pages/SellStockForm";
 
 function App() {
-
   return (
     <Router>
       <Routes>
         <Route path="/signup" element={<Signup />} />
         <Route path="/login" element={<Login />} />
-        <Route 
+        <Route
           path="/dashboard"
           element={
             <PrivateRoute>
@@ -23,7 +27,7 @@ function App() {
             </PrivateRoute>
           }
         />
-        <Route 
+        <Route
           path="/stock-details/:ticker"
           element={
             <PrivateRoute>
@@ -31,7 +35,7 @@ function App() {
             </PrivateRoute>
           }
         />
-        <Route 
+        <Route
           path="/add-stock-details"
           element={
             <PrivateRoute>
@@ -39,6 +43,16 @@ function App() {
             </PrivateRoute>
           }
         />
+
+        <Route
+          path="/sell-stock"
+          element={
+            <PrivateRoute>
+              <SellStockForm />
+            </PrivateRoute>
+          }
+        />
+
         <Route path="*" element={<Navigate to="/login" />} />
       </Routes>
     </Router>
