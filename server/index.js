@@ -7,6 +7,7 @@ const Portfolio = require('./models/Portfolio');
 const DailyStockPrice = require('./models/DailyStockPrice');
 const UserProfile = require('./models/UserProfile');
 const TotalWealth = require('./models/TotalWealth');
+const StockPurchaseHistory = require('./models/StockPurchaseHistory');
 
 
 require('dotenv').config();
@@ -46,35 +47,36 @@ app.get('/api/search/:query', async (req, res) => {
 
 
 // Route to add a stock to a user's portfolio
-app.post('/api/portfolio/add', async (req, res) => {
-  const { userId, stock } = req.body;
+// ******** NOT BEING USED? **********
+// app.post('/api/portfolio/add', async (req, res) => {
+//   const { userId, stock } = req.body;
 
-  try {
-    // Find the user's portfolio
-    let portfolio = await Portfolio.findOne({ userId });
+//   try {
+//     // Find the user's portfolio
+//     let portfolio = await Portfolio.findOne({ userId });
 
-    if (!portfolio) {
-      portfolio = new Portfolio({ userId, stocks: [stock] });
-    } else {
-      portfolio.stocks.push(stock);
-    }
+//     if (!portfolio) {
+//       portfolio = new Portfolio({ userId, stocks: [stock] });
+//     } else {
+//       portfolio.stocks.push(stock);
+//     }
 
-    await portfolio.save();
+//     await portfolio.save();
 
-    // Update total wealth after saving the portfolio
-    try {
-      const updateResponse = await axios.post('http://localhost:5000/api/total-wealth/update', { userId });
-      console.log('Total wealth updated:', updateResponse.data);
-    } catch (updateError) {
-      console.error('Error updating total wealth:', updateError.response?.data || updateError.message);
-    }
+//     // Update total wealth after saving the portfolio
+//     try {
+//       const updateResponse = await axios.post('http://localhost:5000/api/total-wealth/update', { userId });
+//       console.log('Total wealth updated:', updateResponse.data);
+//     } catch (updateError) {
+//       console.error('Error updating total wealth:', updateError.response?.data || updateError.message);
+//     }
 
-    res.json({ message: 'Stock added to portfolio and total wealth updated' });
-  } catch (error) {
-    console.error('Error adding stock to portfolio:', error);
-    res.status(500).json({ error: 'Error adding stock to portfolio' });
-  }
-});
+//     res.json({ message: 'Stock added to portfolio and total wealth updated' });
+//   } catch (error) {
+//     console.error('Error adding stock to portfolio:', error);
+//     res.status(500).json({ error: 'Error adding stock to portfolio' });
+//   }
+// });
 
 
 
@@ -145,27 +147,76 @@ app.get('/api/portfolio/aggregate/:userId', async (req, res) => {
   });
 
 
+
+
 // Route to add stock details
+// app.post('/api/portfolio/addDetails', async (req, res) => {
+//     const { userId, stock } = req.body;
+  
+//     try {
+//       let portfolio = await Portfolio.findOne({ userId });
+  
+//       if (!portfolio) {
+//         portfolio = new Portfolio({ userId, stocks: [stock] });
+//       } else {
+//         portfolio.stocks.push(stock);
+//       }
+  
+//       await portfolio.save();
+//       res.json({ message: 'Stock details added to portfolio' });
+//     } catch (error) {
+//       console.error('Error adding stock details to portfolio:', error);
+//       res.status(500).json({ error: 'Error adding stock details to portfolio' });
+//     }
+//   });
 app.post('/api/portfolio/addDetails', async (req, res) => {
-    const { userId, stock } = req.body;
-  
-    try {
-      let portfolio = await Portfolio.findOne({ userId });
-  
-      if (!portfolio) {
-        portfolio = new Portfolio({ userId, stocks: [stock] });
-      } else {
-        portfolio.stocks.push(stock);
-      }
-  
-      await portfolio.save();
-      res.json({ message: 'Stock details added to portfolio' });
-    } catch (error) {
-      console.error('Error adding stock details to portfolio:', error);
-      res.status(500).json({ error: 'Error adding stock details to portfolio' });
+  const { userId, stock } = req.body;
+
+  try {
+    // Convert input values to numbers
+    const quantity = parseFloat(stock.quantity);
+    const purchasePrice = parseFloat(stock.purchasePrice);
+    const brokerageFees = parseFloat(stock.brokerageFees);
+
+    // Calculate total cost as a number
+    const totalCost = parseFloat(((quantity * purchasePrice) + brokerageFees).toFixed(2));
+
+    // Validate the total cost
+    if (isNaN(totalCost)) {
+      throw new Error(`Invalid totalCost value: ${totalCost}`);
     }
-  });
-  
+
+    // Add to Portfolio
+    let portfolio = await Portfolio.findOne({ userId });
+    if (!portfolio) {
+      portfolio = new Portfolio({ userId, stocks: [stock] });
+    } else {
+      portfolio.stocks.push(stock);
+    }
+    await portfolio.save();
+
+    // Add to StockPurchaseHistory
+    const purchaseRecord = new StockPurchaseHistory({
+      userId,
+      ticker: stock.ticker,
+      name: stock.name,
+      purchaseDate: stock.purchaseDate,
+      quantity,
+      purchasePrice,
+      brokerageFees,
+      totalCost,
+    });
+    await purchaseRecord.save();
+
+    res.json({ message: 'Stock details added to portfolio and purchase history saved' });
+  } catch (error) {
+    console.error('Error adding stock details to portfolio:', error);
+    res.status(500).json({ error: 'Error adding stock details to portfolio' });
+  }
+});
+
+
+
 
 
 

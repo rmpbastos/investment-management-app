@@ -147,6 +147,47 @@ const StockDetailsForm = () => {
   //   }
   // };
 
+
+  // const handleSubmit = async (e) => {
+  //   e.preventDefault();
+  //   const stockDetails = {
+  //     userId,
+  //     stock: {
+  //       ticker: stock.ticker,
+  //       name: stock.name,
+  //       assetType: stock.assetType,
+  //       purchaseDate,
+  //       quantity,
+  //       purchasePrice,
+  //       brokerageFees,
+  //     },
+  //   };
+  
+  //   try {
+  //     // Add stock details to portfolio
+  //     await axios.post("/api/portfolio/addDetails", stockDetails);
+  //     console.log("Stock details added to portfolio.");
+  
+  //     // Call the total wealth update route
+  //     const updateResponse = await axios.post("/api/total-wealth/update", { userId });
+  
+  //     if (updateResponse.data.totalWealth !== undefined) {
+  //       console.log("Total wealth updated successfully:", updateResponse.data.totalWealth);
+  //     } else {
+  //       console.log("Warning: Total wealth not updated due to missing data.");
+  //     }
+  
+  //     // Navigate back to the dashboard
+  //     navigate("/dashboard");
+  //   } catch (error) {
+  //     console.error("Error adding stock details or updating total wealth:", error);
+  
+  //     // Navigate to dashboard even if there's an error to avoid being stuck on this page
+  //     navigate("/dashboard");
+  //   }
+  // };
+
+  
   const handleSubmit = async (e) => {
     e.preventDefault();
     const stockDetails = {
@@ -156,9 +197,9 @@ const StockDetailsForm = () => {
         name: stock.name,
         assetType: stock.assetType,
         purchaseDate,
-        quantity,
-        purchasePrice,
-        brokerageFees,
+        quantity: parseFloat(quantity),
+        purchasePrice: parseFloat(purchasePrice),
+        brokerageFees: parseFloat(brokerageFees),
       },
     };
   
