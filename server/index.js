@@ -257,42 +257,378 @@ app.post('/api/user-profile/create', async (req, res) => {
 
 
 // Route to calculate and save user total wealth
+// app.post('/api/total-wealth/update', async (req, res) => {
+//   const { userId } = req.body;
+//   const apiKey = process.env.TIINGO_API_KEY;
+//   const today = new Date();
+//   today.setHours(0, 0, 0, 0);  // Set to start of today
+
+//   try {
+//     // Check if total wealth is already calculated for today
+//     const existingWealth = await TotalWealth.findOne({
+//       userId,
+//       calculationDate: { $gte: today }  // Check if there's an entry for today
+//     });
+
+//     if (existingWealth) {
+//       console.log(`Total wealth already calculated for today for userId: ${userId}`);
+//       return res.status(200).json({
+//         message: 'Total wealth already calculated for today',
+//         totalWealth: existingWealth.totalWealth
+//       });
+//     }
+
+//     // Fetch the user's portfolio
+//     const portfolio = await Portfolio.findOne({ userId });
+//     if (!portfolio || portfolio.stocks.length === 0) {
+//       return res.status(404).json({ error: 'No portfolio found or portfolio is empty' });
+//     }
+
+//     // Calculate total wealth
+//     let totalWealth = 0;
+//     for (const stock of portfolio.stocks) {
+//       const { ticker, quantity } = stock;
+
+//       // Fetch the latest stock price from the DailyStockPrice collection
+//       let latestPrice = await DailyStockPrice.findOne({ ticker }).sort({ date: -1 });
+
+//       // If there's no price data, fetch from Tiingo
+//       if (!latestPrice) {
+//         console.log(`No local price data found for ${ticker}, fetching from Tiingo...`);
+
+//         try {
+//           const response = await axios.get(`https://api.tiingo.com/tiingo/daily/${ticker}/prices`, {
+//             headers: {
+//               'Content-Type': 'application/json',
+//               'Authorization': `Token ${apiKey}`,
+//             },
+//           });
+
+//           if (response.data && response.data.length > 0) {
+//             const { open, close } = response.data[0];  // Take the most recent price data
+//             latestPrice = new DailyStockPrice({ ticker, open, close, date: new Date() });
+//             await latestPrice.save();  // Save the fetched price to the database
+//             console.log(`Price data saved for ${ticker}.`);
+//           } else {
+//             console.log(`No price data found for ${ticker} from Tiingo.`);
+//             continue;  // Skip this stock if no data is found
+//           }
+//         } catch (apiError) {
+//           console.error(`Error fetching price for ${ticker} from Tiingo:`, apiError.message);
+//           continue;  // Skip this stock if there's an error fetching data
+//         }
+//       }
+
+//       // Calculate total wealth using the latest price
+//       if (latestPrice && latestPrice.close) {
+//         totalWealth += latestPrice.close * quantity;
+//       }
+//     }
+
+//     // If total wealth remains zero, return a warning
+//     if (totalWealth === 0) {
+//       console.log(`Total wealth remains zero for userId: ${userId}.`);
+//       return res.status(400).json({ error: 'Total wealth could not be calculated.' });
+//     }
+
+//     // Create a new TotalWealth entry
+//     const userWealth = new TotalWealth({
+//       userId,
+//       totalWealth,
+//       calculationDate: new Date(),
+//     });
+
+//     await userWealth.save();
+//     res.status(201).json({ message: 'Total wealth calculated and stored successfully', totalWealth });
+//   } catch (error) {
+//     console.error('Error calculating total wealth:', error);
+//     res.status(500).json({ error: 'Error calculating total wealth' });
+//   }
+// });
+
+
+// app.post('/api/total-wealth/update', async (req, res) => {
+//   const { userId } = req.body;
+//   const apiKey = process.env.TIINGO_API_KEY;
+
+//   try {
+//     // Fetch the user's portfolio
+//     const portfolio = await Portfolio.findOne({ userId });
+//     if (!portfolio || portfolio.stocks.length === 0) {
+//       return res.status(404).json({ error: 'No portfolio found or portfolio is empty' });
+//     }
+
+//     // Calculate total wealth
+//     let totalWealth = 0;
+//     for (const stock of portfolio.stocks) {
+//       const { ticker, quantity } = stock;
+//       let latestPrice = await DailyStockPrice.findOne({ ticker }).sort({ date: -1 });
+
+//       // If there's no price data, fetch from Tiingo
+//       if (!latestPrice) {
+//         console.log(`No local price data found for ${ticker}, fetching from Tiingo...`);
+
+//         try {
+//           const response = await axios.get(`https://api.tiingo.com/tiingo/daily/${ticker}/prices`, {
+//             headers: {
+//               'Content-Type': 'application/json',
+//               'Authorization': `Token ${apiKey}`,
+//             },
+//           });
+
+//           // Log the response for debugging
+//           // console.log(`Tiingo API response for ${ticker}:`, response.data);
+
+//           if (response.data && response.data.length > 0) {
+//             const { open, close, date } = response.data[0];
+
+//             // Check for missing fields and handle them
+//             if (open === undefined || close === undefined || date === undefined) {
+//               console.error(`Missing required price data for ${ticker}. Skipping this stock.`);
+//               continue; // Skip saving this stock's data
+//             }
+
+//             // Create and save the latest price data
+//             latestPrice = new DailyStockPrice({
+//               ticker,
+//               open: open || 0, // Provide a default value if `open` is missing
+//               close,
+//               date: new Date(date),
+//             });
+//             await latestPrice.save();
+//             console.log(`Price data saved for ${ticker}.`);
+//           } else {
+//             console.log(`No price data found for ${ticker} from Tiingo.`);
+//             continue; // Skip this stock if no data is found
+//           }
+//         } catch (apiError) {
+//           console.error(`Error fetching price for ${ticker} from Tiingo:`, apiError.message);
+//           continue; // Skip this stock if there's an error fetching data
+//         }
+//       }
+
+//       // Calculate total wealth using the latest price
+//       if (latestPrice && latestPrice.close) {
+//         totalWealth += latestPrice.close * quantity;
+//       }
+//     }
+
+//     // If total wealth remains zero, return a warning
+//     if (totalWealth === 0) {
+//       console.log(`Total wealth remains zero for userId: ${userId}.`);
+//       return res.status(400).json({ error: 'Total wealth could not be calculated.' });
+//     }
+
+//     // Update or create the TotalWealth entry
+//     const userWealth = await TotalWealth.findOneAndUpdate(
+//       { userId },
+//       { totalWealth, calculationDate: new Date() },
+//       { upsert: true, new: true }
+//     );
+
+//     res.status(200).json({ message: 'Total wealth calculated and updated successfully', totalWealth: userWealth.totalWealth });
+//   } catch (error) {
+//     console.error('Error calculating total wealth:', error);
+//     res.status(500).json({ error: 'Error calculating total wealth' });
+//   }
+// });
+
+
+// Updated route to include totalInvested
+// app.post('/api/total-wealth/update', async (req, res) => {
+//   const { userId } = req.body;
+//   const apiKey = process.env.TIINGO_API_KEY;
+
+//   try {
+//     // Fetch the user's portfolio
+//     const portfolio = await Portfolio.findOne({ userId });
+//     if (!portfolio || portfolio.stocks.length === 0) {
+//       return res.status(404).json({ error: 'No portfolio found or portfolio is empty' });
+//     }
+
+//     // Calculate total wealth and total invested
+//     let totalWealth = 0;
+//     let totalInvested = 0;
+
+//     for (const stock of portfolio.stocks) {
+//       const { ticker, quantity, purchasePrice, brokerageFees } = stock;
+//       let latestPrice = await DailyStockPrice.findOne({ ticker }).sort({ date: -1 });
+
+//       // If there's no price data, fetch from Tiingo
+//       if (!latestPrice) {
+//         console.log(`No local price data found for ${ticker}, fetching from Tiingo...`);
+
+//         try {
+//           const response = await axios.get(`https://api.tiingo.com/tiingo/daily/${ticker}/prices`, {
+//             headers: {
+//               'Content-Type': 'application/json',
+//               'Authorization': `Token ${apiKey}`,
+//             },
+//           });
+
+//           console.log(`Tiingo API response for ${ticker}:`, response.data);
+
+//           if (response.data && response.data.length > 0) {
+//             const { open, close, date } = response.data[0];
+
+//             if (open === undefined || close === undefined || date === undefined) {
+//               console.error(`Missing required price data for ${ticker}. Skipping this stock.`);
+//               continue;
+//             }
+
+//             latestPrice = new DailyStockPrice({
+//               ticker,
+//               open: open || 0,
+//               close,
+//               date: new Date(date),
+//             });
+//             await latestPrice.save();
+//             console.log(`Price data saved for ${ticker}.`);
+//           } else {
+//             console.log(`No price data found for ${ticker} from Tiingo.`);
+//             continue;
+//           }
+//         } catch (apiError) {
+//           console.error(`Error fetching price for ${ticker} from Tiingo:`, apiError.message);
+//           continue;
+//         }
+//       }
+
+//       // Calculate total wealth using the latest price
+//       if (latestPrice && latestPrice.close) {
+//         totalWealth += latestPrice.close * quantity;
+//       }
+
+//       // Calculate total invested (cost of the stock including brokerage fees)
+//       totalInvested += (quantity * purchasePrice) + brokerageFees;
+//     }
+
+//     // If total wealth remains zero, return a warning
+//     if (totalWealth === 0) {
+//       console.log(`Total wealth remains zero for userId: ${userId}.`);
+//       return res.status(400).json({ error: 'Total wealth could not be calculated.' });
+//     }
+
+//     // Update or create the TotalWealth entry with totalInvested
+//     const userWealth = await TotalWealth.findOneAndUpdate(
+//       { userId },
+//       { totalWealth, totalInvested, calculationDate: new Date() },
+//       { upsert: true, new: true }
+//     );
+
+//     res.status(200).json({ message: 'Total wealth and total invested calculated and updated successfully', totalWealth: userWealth.totalWealth, totalInvested: userWealth.totalInvested });
+//   } catch (error) {
+//     console.error('Error calculating total wealth:', error);
+//     res.status(500).json({ error: 'Error calculating total wealth' });
+//   }
+// });
+
+
+// app.post('/api/total-wealth/update', async (req, res) => {
+//   const { userId } = req.body;
+//   const apiKey = process.env.TIINGO_API_KEY;
+
+//   try {
+//     // Fetch the user's portfolio
+//     const portfolio = await Portfolio.findOne({ userId });
+//     if (!portfolio || portfolio.stocks.length === 0) {
+//       return res.status(404).json({ error: 'No portfolio found or portfolio is empty' });
+//     }
+
+//     // Calculate total wealth and total invested
+//     let totalWealth = 0;
+//     let totalInvested = 0;
+
+//     for (const stock of portfolio.stocks) {
+//       const { ticker, quantity, purchasePrice, brokerageFees } = stock;
+//       let latestPrice = await DailyStockPrice.findOne({ ticker }).sort({ date: -1 });
+
+//       // Fetch price data from Tiingo if not available locally
+//       if (!latestPrice) {
+//         console.log(`No local price data found for ${ticker}, fetching from Tiingo...`);
+
+//         try {
+//           const response = await axios.get(`https://api.tiingo.com/tiingo/daily/${ticker}/prices`, {
+//             headers: {
+//               'Content-Type': 'application/json',
+//               'Authorization': `Token ${apiKey}`,
+//             },
+//           });
+
+//           if (response.data && response.data.length > 0) {
+//             const { open, close, date } = response.data[0];
+//             latestPrice = new DailyStockPrice({ ticker, open, close, date: new Date(date) });
+//             await latestPrice.save();
+//             console.log(`Price data saved for ${ticker}.`);
+//           } else {
+//             console.log(`No price data found for ${ticker} from Tiingo.`);
+//             continue;
+//           }
+//         } catch (error) {
+//           console.error(`Error fetching price for ${ticker} from Tiingo:`, error.message);
+//           continue;
+//         }
+//       }
+
+//       // Calculate total wealth and total invested
+//       if (latestPrice && latestPrice.close) {
+//         totalWealth += latestPrice.close * quantity;
+//       }
+
+//       totalInvested += (quantity * purchasePrice) + brokerageFees;
+//     }
+
+//     // Check if total wealth is zero and handle accordingly
+//     if (totalWealth === 0) {
+//       console.log(`Total wealth remains zero for userId: ${userId}.`);
+//       return res.status(400).json({ error: 'Total wealth could not be calculated.' });
+//     }
+
+//     // Update the existing TotalWealth entry (do not create a new one)
+//     const userWealth = await TotalWealth.findOneAndUpdate(
+//       { userId },
+//       { totalWealth, totalInvested, calculationDate: new Date() },
+//       { new: true } // Do not use `upsert: true` to avoid creating new entries
+//     );
+
+//     if (!userWealth) {
+//       return res.status(404).json({ error: 'Total wealth entry not found for this user.' });
+//     }
+
+//     res.status(200).json({
+//       message: 'Total wealth and total invested updated successfully',
+//       totalWealth: userWealth.totalWealth,
+//       totalInvested: userWealth.totalInvested,
+//     });
+//   } catch (error) {
+//     console.error('Error updating total wealth:', error);
+//     res.status(500).json({ error: 'Error updating total wealth' });
+//   }
+// });
+
+
 app.post('/api/total-wealth/update', async (req, res) => {
   const { userId } = req.body;
   const apiKey = process.env.TIINGO_API_KEY;
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);  // Set to start of today
 
   try {
-    // Check if total wealth is already calculated for today
-    const existingWealth = await TotalWealth.findOne({
-      userId,
-      calculationDate: { $gte: today }  // Check if there's an entry for today
-    });
-
-    if (existingWealth) {
-      console.log(`Total wealth already calculated for today for userId: ${userId}`);
-      return res.status(200).json({
-        message: 'Total wealth already calculated for today',
-        totalWealth: existingWealth.totalWealth
-      });
-    }
-
     // Fetch the user's portfolio
     const portfolio = await Portfolio.findOne({ userId });
+
+    // If the portfolio is not found or is empty, return a default response
     if (!portfolio || portfolio.stocks.length === 0) {
-      return res.status(404).json({ error: 'No portfolio found or portfolio is empty' });
+      console.log(`Portfolio is empty for userId: ${userId}. Returning default wealth values.`);
+      return res.status(200).json({ totalWealth: 0, totalInvested: 0 });
     }
 
-    // Calculate total wealth
+    // Calculate total wealth and total invested
     let totalWealth = 0;
-    for (const stock of portfolio.stocks) {
-      const { ticker, quantity } = stock;
+    let totalInvested = 0;
 
-      // Fetch the latest stock price from the DailyStockPrice collection
+    for (const stock of portfolio.stocks) {
+      const { ticker, quantity, purchasePrice, brokerageFees } = stock;
       let latestPrice = await DailyStockPrice.findOne({ ticker }).sort({ date: -1 });
 
-      // If there's no price data, fetch from Tiingo
       if (!latestPrice) {
         console.log(`No local price data found for ${ticker}, fetching from Tiingo...`);
 
@@ -305,66 +641,155 @@ app.post('/api/total-wealth/update', async (req, res) => {
           });
 
           if (response.data && response.data.length > 0) {
-            const { open, close } = response.data[0];  // Take the most recent price data
-            latestPrice = new DailyStockPrice({ ticker, open, close, date: new Date() });
-            await latestPrice.save();  // Save the fetched price to the database
-            console.log(`Price data saved for ${ticker}.`);
+            const { close, date } = response.data[0];
+            latestPrice = new DailyStockPrice({ ticker, close, date: new Date(date) });
+            await latestPrice.save();
           } else {
-            console.log(`No price data found for ${ticker} from Tiingo.`);
-            continue;  // Skip this stock if no data is found
+            continue;
           }
         } catch (apiError) {
           console.error(`Error fetching price for ${ticker} from Tiingo:`, apiError.message);
-          continue;  // Skip this stock if there's an error fetching data
+          continue;
         }
       }
 
-      // Calculate total wealth using the latest price
-      if (latestPrice && latestPrice.close) {
-        totalWealth += latestPrice.close * quantity;
-      }
+      totalWealth += latestPrice.close * quantity;
+      totalInvested += (quantity * purchasePrice) + brokerageFees;
     }
 
-    // If total wealth remains zero, return a warning
-    if (totalWealth === 0) {
-      console.log(`Total wealth remains zero for userId: ${userId}.`);
-      return res.status(400).json({ error: 'Total wealth could not be calculated.' });
-    }
+    const userWealth = await TotalWealth.findOneAndUpdate(
+      { userId },
+      { totalWealth, totalInvested, calculationDate: new Date() },
+      { upsert: true, new: true }
+    );
 
-    // Create a new TotalWealth entry
-    const userWealth = new TotalWealth({
-      userId,
-      totalWealth,
-      calculationDate: new Date(),
-    });
-
-    await userWealth.save();
-    res.status(201).json({ message: 'Total wealth calculated and stored successfully', totalWealth });
+    res.status(200).json({ totalWealth: userWealth.totalWealth, totalInvested: userWealth.totalInvested });
   } catch (error) {
-    console.error('Error calculating total wealth:', error);
-    res.status(500).json({ error: 'Error calculating total wealth' });
+    console.error('Error updating total wealth:', error);
+    res.status(500).json({ error: 'Error updating total wealth' });
   }
 });
 
 
+
+
+
+
+
+
+
 // Route to fetch the latest total wealth for a user
+// app.get('/api/total-wealth/:userId', async (req, res) => {
+//   const { userId } = req.params;
+
+//   try {
+//     const latestWealth = await TotalWealth.findOne({ userId }).sort({ calculationDate: -1 });
+
+//     if (!latestWealth) {
+//       console.log(`No wealth data found for userId: ${userId}`);  // Debug line
+//       return res.status(404).json({ error: 'No wealth data found' });
+//     }
+
+//     res.status(200).json({ totalWealth: latestWealth.totalWealth });
+//   } catch (error) {
+//     console.error('Error fetching total wealth:', error);
+//     res.status(500).json({ error: 'Error fetching total wealth' });
+//   }
+// });
+
+
+// Route to fetch the latest total wealth for a user
+// app.get('/api/total-wealth/:userId', async (req, res) => {
+//   const { userId } = req.params;
+
+//   try {
+//     let latestWealth = await TotalWealth.findOne({ userId }).sort({ calculationDate: -1 });
+
+//     // If no wealth data is found, create a default entry
+//     if (!latestWealth) {
+//       console.log(`No wealth data found for userId: ${userId}. Creating a default entry.`);
+//       latestWealth = new TotalWealth({
+//         userId,
+//         totalWealth: 0,
+//         totalInvested: 0,
+//         calculationDate: new Date(),
+//       });
+//       await latestWealth.save();
+//     }
+
+//     res.status(200).json({ totalWealth: latestWealth.totalWealth, totalInvested: latestWealth.totalInvested });
+//   } catch (error) {
+//     console.error('Error fetching total wealth:', error);
+//     res.status(500).json({ error: 'Error fetching total wealth' });
+//   }
+// });
+
+
+
 app.get('/api/total-wealth/:userId', async (req, res) => {
   const { userId } = req.params;
 
   try {
+    // Fetch the latest total wealth data without creating a new entry
     const latestWealth = await TotalWealth.findOne({ userId }).sort({ calculationDate: -1 });
 
     if (!latestWealth) {
-      console.log(`No wealth data found for userId: ${userId}`);  // Debug line
-      return res.status(404).json({ error: 'No wealth data found' });
+      console.log(`No wealth data found for userId: ${userId}.`);
+      return res.status(404).json({ error: 'No wealth data found for this user.' });
     }
 
-    res.status(200).json({ totalWealth: latestWealth.totalWealth });
+    res.status(200).json({
+      totalWealth: latestWealth.totalWealth,
+      totalInvested: latestWealth.totalInvested,
+    });
   } catch (error) {
     console.error('Error fetching total wealth:', error);
     res.status(500).json({ error: 'Error fetching total wealth' });
   }
 });
+
+
+
+// Route to create initial TotalWealth entry for a new user
+app.post('/api/total-wealth/create', async (req, res) => {
+  const { userId } = req.body;
+
+  try {
+    // Check if a TotalWealth entry already exists for the user
+    const existingWealth = await TotalWealth.findOne({ userId });
+    if (existingWealth) {
+      return res.status(200).json({ message: 'TotalWealth entry already exists' });
+    }
+
+    // Create a new TotalWealth entry with default values
+    const newWealth = new TotalWealth({
+      userId,
+      totalWealth: 0,
+      totalInvested: 0,
+      calculationDate: new Date()
+    });
+
+    await newWealth.save();
+    res.status(201).json({ message: 'Initial TotalWealth entry created successfully' });
+  } catch (error) {
+    console.error('Error creating initial TotalWealth entry:', error);
+    res.status(500).json({ error: 'Error creating initial TotalWealth entry' });
+  }
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

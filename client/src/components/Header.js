@@ -185,11 +185,12 @@ const Header = ({ setPortfolio }) => {
   // Fetch and update the total wealth
   const fetchTotalWealth = async () => {
     if (!currentUser) return;
-
+  
     try {
       console.log(`Updating total wealth for userId: ${currentUser.uid}`);
+      // Directly update total wealth without checking the calculation date
       const response = await axios.post(`/api/total-wealth/update`, { userId: currentUser.uid });
-
+  
       if (response.data && response.data.totalWealth !== undefined) {
         setTotalWealth(response.data.totalWealth);
       } else {
@@ -198,7 +199,24 @@ const Header = ({ setPortfolio }) => {
     } catch (error) {
       console.error("Error updating total wealth:", error);
     }
-  };
+  };  
+  // const fetchTotalWealth = async () => {
+  //   if (!currentUser) return;
+
+  //   try {
+  //     console.log(`Updating total wealth for userId: ${currentUser.uid}`);
+  //     const response = await axios.post(`/api/total-wealth/update`, { userId: currentUser.uid });
+
+  //     if (response.data && response.data.totalWealth !== undefined) {
+  //       setTotalWealth(response.data.totalWealth);
+  //     } else {
+  //       console.log('Total wealth not found or not updated for this user.');
+  //     }
+  //   } catch (error) {
+  //     console.error("Error updating total wealth:", error);
+  //   }
+  // };
+
 
   // Fetch the total wealth when the component loads
   useEffect(() => {
