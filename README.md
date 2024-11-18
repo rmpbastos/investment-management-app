@@ -1,14 +1,18 @@
 # investment-management-app
 
 ## Steps to run the app locally:
-1. Go to /ml_model and activate the Python environment:
+1. Activate the Python environment and the Flask API component
+
+   At \ml_model:
    
    **.\investwise_env\Scripts\activate**
 
-2. Go to /server:
+   **python app.py**
+
+3. Activate the server at \server:
 
    **nodemon index**
 
-3. Go to /client:
+4. Activate the frontend at \client:
 
    **npm start**
