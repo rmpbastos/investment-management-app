@@ -847,6 +847,84 @@ app.post('/api/stock/intraday/:ticker', async (req, res) => {
 
 
 
+// Route to get total wealth data for the past 12 months (for the area chart)
+// app.get('/api/total-wealth/history/:userId', async (req, res) => {
+//   const { userId } = req.params;
+
+//   try {
+//     // Get the current date and subtract 12 months
+//     const currentDate = new Date();
+//     const oneYearAgo = new Date(currentDate);
+//     oneYearAgo.setMonth(currentDate.getMonth() - 12);
+
+//     // Fetch total wealth data for the past 12 months
+//     const wealthHistory = await TotalWealth.find({
+//       userId,
+//       calculationDate: { $gte: oneYearAgo },
+//     }).sort({ calculationDate: 1 });
+
+//     res.status(200).json(wealthHistory);
+//   } catch (error) {
+//     console.error('Error fetching total wealth history:', error);
+//     res.status(500).json({ error: 'Error fetching total wealth history' });
+//   }
+// });
+
+
+// Route to get the latest total wealth entry for each month (for the area chart)
+app.get('/api/total-wealth/history/:userId', async (req, res) => {
+  const { userId } = req.params;
+
+  try {
+    const currentDate = new Date();
+    const oneYearAgo = new Date(currentDate);
+    oneYearAgo.setMonth(currentDate.getMonth() - 12);
+
+    // Aggregate data to get the latest entry for each month
+    const wealthHistory = await TotalWealth.aggregate([
+      {
+        $match: {
+          userId,
+          calculationDate: { $gte: oneYearAgo },
+        },
+      },
+      {
+        $sort: {
+          calculationDate: 1, // Sort by date in ascending order
+        },
+      },
+      {
+        $group: {
+          _id: {
+            year: { $year: "$calculationDate" },
+            month: { $month: "$calculationDate" },
+          },
+          totalWealth: { $last: "$totalWealth" },
+          totalInvested: { $last: "$totalInvested" },
+          calculationDate: { $last: "$calculationDate" },
+        },
+      },
+      {
+        $sort: {
+          "_id.year": 1,
+          "_id.month": 1,
+        },
+      },
+    ]);
+
+    // Format the response data
+    const responseData = wealthHistory.map((entry) => ({
+      calculationDate: entry.calculationDate,
+      totalWealth: entry.totalWealth,
+      totalInvested: entry.totalInvested,
+    }));
+
+    res.status(200).json(responseData);
+  } catch (error) {
+    console.error('Error fetching total wealth history:', error);
+    res.status(500).json({ error: 'Error fetching total wealth history' });
+  }
+});
 
 
 
