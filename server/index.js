@@ -20,6 +20,7 @@ app.use(cors());
 app.use(bodyParser.json());
 app.use(express.json()); // ******************** FLASK API TEST ********************
 
+const ALPHA_VANTAGE_API_KEY = process.env.ALPHA_VANTAGE_API_KEY;
 
 // Connect to MongoDB Atlas
 mongoose.connect(process.env.MONGODB_URI)
@@ -312,160 +313,46 @@ app.post('/api/user-profile/create', async (req, res) => {
 // app.post('/api/total-wealth/update', async (req, res) => {
 //   const { userId } = req.body;
 //   const apiKey = process.env.TIINGO_API_KEY;
-//   const today = new Date();
-//   today.setHours(0, 0, 0, 0);  // Set to start of today
-
-//   try {
-//     // Check if total wealth is already calculated for today
-//     const existingWealth = await TotalWealth.findOne({
-//       userId,
-//       calculationDate: { $gte: today }  // Check if there's an entry for today
-//     });
-
-//     if (existingWealth) {
-//       console.log(`Total wealth already calculated for today for userId: ${userId}`);
-//       return res.status(200).json({
-//         message: 'Total wealth already calculated for today',
-//         totalWealth: existingWealth.totalWealth
-//       });
-//     }
-
-//     // Fetch the user's portfolio
-//     const portfolio = await Portfolio.findOne({ userId });
-//     if (!portfolio || portfolio.stocks.length === 0) {
-//       return res.status(404).json({ error: 'No portfolio found or portfolio is empty' });
-//     }
-
-//     // Calculate total wealth
-//     let totalWealth = 0;
-//     for (const stock of portfolio.stocks) {
-//       const { ticker, quantity } = stock;
-
-//       // Fetch the latest stock price from the DailyStockPrice collection
-//       let latestPrice = await DailyStockPrice.findOne({ ticker }).sort({ date: -1 });
-
-//       // If there's no price data, fetch from Tiingo
-//       if (!latestPrice) {
-//         console.log(`No local price data found for ${ticker}, fetching from Tiingo...`);
-
-//         try {
-//           const response = await axios.get(`https://api.tiingo.com/tiingo/daily/${ticker}/prices`, {
-//             headers: {
-//               'Content-Type': 'application/json',
-//               'Authorization': `Token ${apiKey}`,
-//             },
-//           });
-
-//           if (response.data && response.data.length > 0) {
-//             const { open, close } = response.data[0];  // Take the most recent price data
-//             latestPrice = new DailyStockPrice({ ticker, open, close, date: new Date() });
-//             await latestPrice.save();  // Save the fetched price to the database
-//             console.log(`Price data saved for ${ticker}.`);
-//           } else {
-//             console.log(`No price data found for ${ticker} from Tiingo.`);
-//             continue;  // Skip this stock if no data is found
-//           }
-//         } catch (apiError) {
-//           console.error(`Error fetching price for ${ticker} from Tiingo:`, apiError.message);
-//           continue;  // Skip this stock if there's an error fetching data
-//         }
-//       }
-
-//       // Calculate total wealth using the latest price
-//       if (latestPrice && latestPrice.close) {
-//         totalWealth += latestPrice.close * quantity;
-//       }
-//     }
-
-//     // If total wealth remains zero, return a warning
-//     if (totalWealth === 0) {
-//       console.log(`Total wealth remains zero for userId: ${userId}.`);
-//       return res.status(400).json({ error: 'Total wealth could not be calculated.' });
-//     }
-
-//     // Create a new TotalWealth entry
-//     const userWealth = new TotalWealth({
-//       userId,
-//       totalWealth,
-//       calculationDate: new Date(),
-//     });
-
-//     await userWealth.save();
-//     res.status(201).json({ message: 'Total wealth calculated and stored successfully', totalWealth });
-//   } catch (error) {
-//     console.error('Error calculating total wealth:', error);
-//     res.status(500).json({ error: 'Error calculating total wealth' });
-//   }
-// });
-
-
-// app.post('/api/total-wealth/update', async (req, res) => {
-//   const { userId } = req.body;
-//   const apiKey = process.env.TIINGO_API_KEY;
 
 //   try {
 //     // Fetch the user's portfolio
 //     const portfolio = await Portfolio.findOne({ userId });
 //     if (!portfolio || portfolio.stocks.length === 0) {
-//       return res.status(404).json({ error: 'No portfolio found or portfolio is empty' });
+//       console.log(`Portfolio is empty for userId: ${userId}. Returning default wealth values.`);
+//       return res.status(200).json({ totalWealth: 0, totalInvested: 0 });
 //     }
 
-//     // Calculate total wealth
 //     let totalWealth = 0;
+//     let totalInvested = 0;
+
+//     // Iterate through the stocks in the portfolio
 //     for (const stock of portfolio.stocks) {
-//       const { ticker, quantity } = stock;
-//       let latestPrice = await DailyStockPrice.findOne({ ticker }).sort({ date: -1 });
+//       const { ticker, quantity, purchasePrice, brokerageFees } = stock;
 
-//       // If there's no price data, fetch from Tiingo
-//       if (!latestPrice) {
-//         console.log(`No local price data found for ${ticker}, fetching from Tiingo...`);
+//       // Fetch the latest close price from the backend (same as used in StockCard)
+//       try {
+//         const response = await axios.post(`http://localhost:5000/api/stock/latest/${ticker}`, {
+//           method: "POST",
+//           headers: {
+//             'Content-Type': 'application/json',
+//           },
+//         });
+//         const latestPrice = response.data;
 
-//         try {
-//           const response = await axios.get(`https://api.tiingo.com/tiingo/daily/${ticker}/prices`, {
-//             headers: {
-//               'Content-Type': 'application/json',
-//               'Authorization': `Token ${apiKey}`,
-//             },
-//           });
-
-//           // Log the response for debugging
-//           // console.log(`Tiingo API response for ${ticker}:`, response.data);
-
-//           if (response.data && response.data.length > 0) {
-//             const { open, close, date } = response.data[0];
-
-//             // Check for missing fields and handle them
-//             if (open === undefined || close === undefined || date === undefined) {
-//               console.error(`Missing required price data for ${ticker}. Skipping this stock.`);
-//               continue; // Skip saving this stock's data
-//             }
-
-//             // Create and save the latest price data
-//             latestPrice = new DailyStockPrice({
-//               ticker,
-//               open: open || 0, // Provide a default value if `open` is missing
-//               close,
-//               date: new Date(date),
-//             });
-//             await latestPrice.save();
-//             console.log(`Price data saved for ${ticker}.`);
-//           } else {
-//             console.log(`No price data found for ${ticker} from Tiingo.`);
-//             continue; // Skip this stock if no data is found
-//           }
-//         } catch (apiError) {
-//           console.error(`Error fetching price for ${ticker} from Tiingo:`, apiError.message);
-//           continue; // Skip this stock if there's an error fetching data
+//         // If we have valid price data, calculate the stock value and total cost
+//         if (latestPrice && latestPrice.close) {
+//           totalWealth += latestPrice.close * quantity;
 //         }
-//       }
 
-//       // Calculate total wealth using the latest price
-//       if (latestPrice && latestPrice.close) {
-//         totalWealth += latestPrice.close * quantity;
+//         // Calculate total invested (cost of the stock including brokerage fees)
+//         totalInvested += (quantity * purchasePrice) + brokerageFees;
+//       } catch (error) {
+//         console.error(`Error fetching latest price for ${ticker}:`, error.message);
+//         continue; // Skip the stock if there's an error
 //       }
 //     }
 
-//     // If total wealth remains zero, return a warning
+//     // Check if total wealth remains zero
 //     if (totalWealth === 0) {
 //       console.log(`Total wealth remains zero for userId: ${userId}.`);
 //       return res.status(400).json({ error: 'Total wealth could not be calculated.' });
@@ -474,181 +361,11 @@ app.post('/api/user-profile/create', async (req, res) => {
 //     // Update or create the TotalWealth entry
 //     const userWealth = await TotalWealth.findOneAndUpdate(
 //       { userId },
-//       { totalWealth, calculationDate: new Date() },
-//       { upsert: true, new: true }
-//     );
-
-//     res.status(200).json({ message: 'Total wealth calculated and updated successfully', totalWealth: userWealth.totalWealth });
-//   } catch (error) {
-//     console.error('Error calculating total wealth:', error);
-//     res.status(500).json({ error: 'Error calculating total wealth' });
-//   }
-// });
-
-
-// Updated route to include totalInvested
-// app.post('/api/total-wealth/update', async (req, res) => {
-//   const { userId } = req.body;
-//   const apiKey = process.env.TIINGO_API_KEY;
-
-//   try {
-//     // Fetch the user's portfolio
-//     const portfolio = await Portfolio.findOne({ userId });
-//     if (!portfolio || portfolio.stocks.length === 0) {
-//       return res.status(404).json({ error: 'No portfolio found or portfolio is empty' });
-//     }
-
-//     // Calculate total wealth and total invested
-//     let totalWealth = 0;
-//     let totalInvested = 0;
-
-//     for (const stock of portfolio.stocks) {
-//       const { ticker, quantity, purchasePrice, brokerageFees } = stock;
-//       let latestPrice = await DailyStockPrice.findOne({ ticker }).sort({ date: -1 });
-
-//       // If there's no price data, fetch from Tiingo
-//       if (!latestPrice) {
-//         console.log(`No local price data found for ${ticker}, fetching from Tiingo...`);
-
-//         try {
-//           const response = await axios.get(`https://api.tiingo.com/tiingo/daily/${ticker}/prices`, {
-//             headers: {
-//               'Content-Type': 'application/json',
-//               'Authorization': `Token ${apiKey}`,
-//             },
-//           });
-
-//           console.log(`Tiingo API response for ${ticker}:`, response.data);
-
-//           if (response.data && response.data.length > 0) {
-//             const { open, close, date } = response.data[0];
-
-//             if (open === undefined || close === undefined || date === undefined) {
-//               console.error(`Missing required price data for ${ticker}. Skipping this stock.`);
-//               continue;
-//             }
-
-//             latestPrice = new DailyStockPrice({
-//               ticker,
-//               open: open || 0,
-//               close,
-//               date: new Date(date),
-//             });
-//             await latestPrice.save();
-//             console.log(`Price data saved for ${ticker}.`);
-//           } else {
-//             console.log(`No price data found for ${ticker} from Tiingo.`);
-//             continue;
-//           }
-//         } catch (apiError) {
-//           console.error(`Error fetching price for ${ticker} from Tiingo:`, apiError.message);
-//           continue;
-//         }
-//       }
-
-//       // Calculate total wealth using the latest price
-//       if (latestPrice && latestPrice.close) {
-//         totalWealth += latestPrice.close * quantity;
-//       }
-
-//       // Calculate total invested (cost of the stock including brokerage fees)
-//       totalInvested += (quantity * purchasePrice) + brokerageFees;
-//     }
-
-//     // If total wealth remains zero, return a warning
-//     if (totalWealth === 0) {
-//       console.log(`Total wealth remains zero for userId: ${userId}.`);
-//       return res.status(400).json({ error: 'Total wealth could not be calculated.' });
-//     }
-
-//     // Update or create the TotalWealth entry with totalInvested
-//     const userWealth = await TotalWealth.findOneAndUpdate(
-//       { userId },
 //       { totalWealth, totalInvested, calculationDate: new Date() },
 //       { upsert: true, new: true }
 //     );
-
-//     res.status(200).json({ message: 'Total wealth and total invested calculated and updated successfully', totalWealth: userWealth.totalWealth, totalInvested: userWealth.totalInvested });
-//   } catch (error) {
-//     console.error('Error calculating total wealth:', error);
-//     res.status(500).json({ error: 'Error calculating total wealth' });
-//   }
-// });
-
-
-// app.post('/api/total-wealth/update', async (req, res) => {
-//   const { userId } = req.body;
-//   const apiKey = process.env.TIINGO_API_KEY;
-
-//   try {
-//     // Fetch the user's portfolio
-//     const portfolio = await Portfolio.findOne({ userId });
-//     if (!portfolio || portfolio.stocks.length === 0) {
-//       return res.status(404).json({ error: 'No portfolio found or portfolio is empty' });
-//     }
-
-//     // Calculate total wealth and total invested
-//     let totalWealth = 0;
-//     let totalInvested = 0;
-
-//     for (const stock of portfolio.stocks) {
-//       const { ticker, quantity, purchasePrice, brokerageFees } = stock;
-//       let latestPrice = await DailyStockPrice.findOne({ ticker }).sort({ date: -1 });
-
-//       // Fetch price data from Tiingo if not available locally
-//       if (!latestPrice) {
-//         console.log(`No local price data found for ${ticker}, fetching from Tiingo...`);
-
-//         try {
-//           const response = await axios.get(`https://api.tiingo.com/tiingo/daily/${ticker}/prices`, {
-//             headers: {
-//               'Content-Type': 'application/json',
-//               'Authorization': `Token ${apiKey}`,
-//             },
-//           });
-
-//           if (response.data && response.data.length > 0) {
-//             const { open, close, date } = response.data[0];
-//             latestPrice = new DailyStockPrice({ ticker, open, close, date: new Date(date) });
-//             await latestPrice.save();
-//             console.log(`Price data saved for ${ticker}.`);
-//           } else {
-//             console.log(`No price data found for ${ticker} from Tiingo.`);
-//             continue;
-//           }
-//         } catch (error) {
-//           console.error(`Error fetching price for ${ticker} from Tiingo:`, error.message);
-//           continue;
-//         }
-//       }
-
-//       // Calculate total wealth and total invested
-//       if (latestPrice && latestPrice.close) {
-//         totalWealth += latestPrice.close * quantity;
-//       }
-
-//       totalInvested += (quantity * purchasePrice) + brokerageFees;
-//     }
-
-//     // Check if total wealth is zero and handle accordingly
-//     if (totalWealth === 0) {
-//       console.log(`Total wealth remains zero for userId: ${userId}.`);
-//       return res.status(400).json({ error: 'Total wealth could not be calculated.' });
-//     }
-
-//     // Update the existing TotalWealth entry (do not create a new one)
-//     const userWealth = await TotalWealth.findOneAndUpdate(
-//       { userId },
-//       { totalWealth, totalInvested, calculationDate: new Date() },
-//       { new: true } // Do not use `upsert: true` to avoid creating new entries
-//     );
-
-//     if (!userWealth) {
-//       return res.status(404).json({ error: 'Total wealth entry not found for this user.' });
-//     }
 
 //     res.status(200).json({
-//       message: 'Total wealth and total invested updated successfully',
 //       totalWealth: userWealth.totalWealth,
 //       totalInvested: userWealth.totalInvested,
 //     });
@@ -659,56 +376,136 @@ app.post('/api/user-profile/create', async (req, res) => {
 // });
 
 
+// app.post('/api/total-wealth/update', async (req, res) => {
+//   const { userId } = req.body;
+//   const apiKey = process.env.ALPHA_VANTAGE_API_KEY;
+
+//   try {
+//     const portfolio = await Portfolio.findOne({ userId });
+
+//     if (!portfolio || portfolio.stocks.length === 0) {
+//       return res.status(200).json({ totalWealth: 0, totalInvested: 0 });
+//     }
+
+//     let totalWealth = 0;
+//     let totalInvested = 0;
+
+//     for (const stock of portfolio.stocks) {
+//       const { ticker, quantity, purchasePrice, brokerageFees } = stock;
+
+//       // Fetch the latest stock price directly
+//       const priceUrl = `https://www.alphavantage.co/query?function=TIME_SERIES_DAILY_ADJUSTED&symbol=${ticker}&apikey=${apiKey}`;
+
+//       try {
+//         console.log(`Fetching price data for ${ticker}...`);
+//         const response = await axios.get(priceUrl);
+
+//         if (response.headers['content-type'].includes('application/json')) {
+//           const data = response.data;
+//           if (data["Time Series (Daily)"]) {
+//             const latestDate = Object.keys(data["Time Series (Daily)"])[0];
+//             const latestData = data["Time Series (Daily)"][latestDate];
+
+//             const closePrice = parseFloat(latestData["4. close"]);
+//             if (!isNaN(closePrice)) {
+//               totalWealth += closePrice * quantity;
+//             }
+//           }
+//         }
+//       } catch (error) {
+//         console.error(`Error fetching price data for ${ticker}:`, error.message);
+//       }
+
+//       totalInvested += (quantity * purchasePrice) + brokerageFees;
+//     }
+
+//     const userWealth = await TotalWealth.findOneAndUpdate(
+//       { userId },
+//       { totalWealth, totalInvested, calculationDate: new Date() },
+//       { upsert: true, new: true }
+//     );
+
+//     res.status(200).json({ totalWealth: userWealth.totalWealth, totalInvested: userWealth.totalInvested });
+//   } catch (error) {
+//     console.error('Error updating total wealth:', error);
+//     res.status(500).json({ error: 'Error updating total wealth' });
+//   }
+// });
+
+
+
+
 app.post('/api/total-wealth/update', async (req, res) => {
   const { userId } = req.body;
-  const apiKey = process.env.TIINGO_API_KEY;
+  const apiKey = process.env.ALPHA_VANTAGE_API_KEY;
 
   try {
-    // Fetch the user's portfolio
     const portfolio = await Portfolio.findOne({ userId });
 
-    // If the portfolio is not found or is empty, return a default response
     if (!portfolio || portfolio.stocks.length === 0) {
-      console.log(`Portfolio is empty for userId: ${userId}. Returning default wealth values.`);
       return res.status(200).json({ totalWealth: 0, totalInvested: 0 });
     }
 
-    // Calculate total wealth and total invested
     let totalWealth = 0;
     let totalInvested = 0;
 
     for (const stock of portfolio.stocks) {
       const { ticker, quantity, purchasePrice, brokerageFees } = stock;
-      let latestPrice = await DailyStockPrice.findOne({ ticker }).sort({ date: -1 });
 
-      if (!latestPrice) {
-        console.log(`No local price data found for ${ticker}, fetching from Tiingo...`);
+      // Attempt to fetch intraday data for real-time price
+      const intradayUrl = `https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&symbol=${ticker}&interval=5min&apikey=${apiKey}`;
+
+      let currentPrice = null;
+
+      try {
+        console.log(`Fetching intraday price data for ${ticker}...`);
+        const intradayResponse = await axios.get(intradayUrl);
+
+        if (intradayResponse.headers['content-type'].includes('application/json')) {
+          const intradayData = intradayResponse.data;
+          const timeSeries = intradayData["Time Series (5min)"];
+
+          if (timeSeries) {
+            const latestTimestamp = Object.keys(timeSeries)[0];
+            const latestIntradayData = timeSeries[latestTimestamp];
+            currentPrice = parseFloat(latestIntradayData["4. close"]);
+          }
+        }
+      } catch (error) {
+        console.error(`Error fetching intraday price for ${ticker}:`, error.message);
+      }
+
+      // If intraday data is not available, fallback to daily adjusted data
+      if (!currentPrice) {
+        const dailyUrl = `https://www.alphavantage.co/query?function=TIME_SERIES_DAILY_ADJUSTED&symbol=${ticker}&apikey=${apiKey}`;
 
         try {
-          const response = await axios.get(`https://api.tiingo.com/tiingo/daily/${ticker}/prices`, {
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Token ${apiKey}`,
-            },
-          });
+          console.log(`Fetching daily adjusted price data for ${ticker}...`);
+          const dailyResponse = await axios.get(dailyUrl);
 
-          if (response.data && response.data.length > 0) {
-            const { close, date } = response.data[0];
-            latestPrice = new DailyStockPrice({ ticker, close, date: new Date(date) });
-            await latestPrice.save();
-          } else {
-            continue;
+          if (dailyResponse.headers['content-type'].includes('application/json')) {
+            const dailyData = dailyResponse.data;
+            if (dailyData["Time Series (Daily)"]) {
+              const latestDate = Object.keys(dailyData["Time Series (Daily)"])[0];
+              const latestDailyData = dailyData["Time Series (Daily)"][latestDate];
+              currentPrice = parseFloat(latestDailyData["4. close"]);
+            }
           }
-        } catch (apiError) {
-          console.error(`Error fetching price for ${ticker} from Tiingo:`, apiError.message);
-          continue;
+        } catch (error) {
+          console.error(`Error fetching daily adjusted price for ${ticker}:`, error.message);
         }
       }
 
-      totalWealth += latestPrice.close * quantity;
+      // If a valid current price was fetched, update total wealth
+      if (!isNaN(currentPrice)) {
+        totalWealth += currentPrice * quantity;
+      }
+
+      // Calculate total invested amount
       totalInvested += (quantity * purchasePrice) + brokerageFees;
     }
 
+    // Update total wealth in the database
     const userWealth = await TotalWealth.findOneAndUpdate(
       { userId },
       { totalWealth, totalInvested, calculationDate: new Date() },
@@ -721,6 +518,7 @@ app.post('/api/total-wealth/update', async (req, res) => {
     res.status(500).json({ error: 'Error updating total wealth' });
   }
 });
+
 
 
 
@@ -918,6 +716,138 @@ app.post("/api/portfolio/sell", async (req, res) => {
     res.status(500).json({ error: "Error handling stock sale" });
   }
 });
+
+
+
+
+
+// Route to Fetch Sentiment Data
+app.post('/api/stock/sentiment/:ticker', async (req, res) => {
+  const { ticker } = req.params;
+  const apiKey = process.env.ALPHA_VANTAGE_API_KEY;
+
+  if (!ticker) {
+    return res.status(400).json({ error: 'Ticker symbol is required.' });
+  }
+
+  const sentimentUrl = `https://www.alphavantage.co/query?function=NEWS_SENTIMENT&tickers=${ticker}&apikey=${apiKey}`;
+
+  try {
+    console.log(`Fetching sentiment data for ${ticker}...`);
+    const response = await axios.get(sentimentUrl);
+
+    if (response.headers['content-type'].includes('application/json')) {
+      const data = response.data;
+      if (data.feed && data.feed.length > 0) {
+        const latestArticle = data.feed[0];
+        const overallSentimentScore = parseFloat(latestArticle.overall_sentiment_score) || 0;
+        const tickerSentimentScore = parseFloat(latestArticle.ticker_sentiment?.[0]?.ticker_sentiment_score) || 0;
+
+        return res.json({ overallSentimentScore, tickerSentimentScore });
+      } else {
+        return res.status(404).json({ error: 'No sentiment data found for this ticker.' });
+      }
+    } else {
+      return res.status(500).json({ error: 'Invalid response from API.' });
+    }
+  } catch (error) {
+    console.error(`Error fetching sentiment data for ${ticker}:`, error);
+    res.status(500).json({ error: 'Error fetching sentiment data.' });
+  }
+});
+
+// Route to Fetch Price Data for the ML model
+app.post('/api/stock/latest/:ticker', async (req, res) => {
+  const { ticker } = req.params;
+  const apiKey = process.env.ALPHA_VANTAGE_API_KEY;
+
+  if (!ticker) {
+    return res.status(400).json({ error: 'Ticker symbol is required.' });
+  }
+
+  const priceUrl = `https://www.alphavantage.co/query?function=TIME_SERIES_DAILY_ADJUSTED&symbol=${ticker}&apikey=${apiKey}`;
+
+  try {
+    console.log(`Fetching price data for ${ticker}...`);
+    const response = await axios.get(priceUrl);
+
+    if (response.headers['content-type'].includes('application/json')) {
+      const data = response.data;
+      if (data["Time Series (Daily)"]) {
+        const latestDate = Object.keys(data["Time Series (Daily)"])[0];
+        const latestData = data["Time Series (Daily)"][latestDate];
+
+        const priceData = {
+          open: parseFloat(latestData["1. open"]),
+          high: parseFloat(latestData["2. high"]),
+          low: parseFloat(latestData["3. low"]),
+          close: parseFloat(latestData["4. close"]),
+          adjusted_close: parseFloat(latestData["5. adjusted close"]),
+          volume: parseInt(latestData["6. volume"]),
+          dividend_amount: parseFloat(latestData["7. dividend amount"]),
+          split_coefficient: parseFloat(latestData["8. split coefficient"]),
+        };
+
+        return res.json(priceData);
+      } else {
+        return res.status(404).json({ error: 'No price data found for this ticker.' });
+      }
+    } else {
+      return res.status(500).json({ error: 'Invalid response from API.' });
+    }
+  } catch (error) {
+    console.error(`Error fetching price data for ${ticker}:`, error);
+    res.status(500).json({ error: 'Error fetching price data.' });
+  }
+});
+
+
+
+
+// Route to Fetch Intraday Price Data (most up-to-date)
+app.post('/api/stock/intraday/:ticker', async (req, res) => {
+  const { ticker } = req.params;
+  const apiKey = process.env.ALPHA_VANTAGE_API_KEY;
+
+  const intradayUrl = `https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&symbol=${ticker}&interval=5min&apikey=${apiKey}&outputsize=compact`;
+
+  try {
+    console.log(`Fetching intraday price data for ${ticker}...`);
+    const response = await axios.get(intradayUrl);
+
+    if (response.headers['content-type'].includes('application/json')) {
+      const data = response.data;
+      const timeSeries = data["Time Series (5min)"];
+      if (timeSeries) {
+        const latestTimestamp = Object.keys(timeSeries)[0];
+        const latestData = timeSeries[latestTimestamp];
+
+        const intradayPriceData = {
+          open: parseFloat(latestData["1. open"]),
+          high: parseFloat(latestData["2. high"]),
+          low: parseFloat(latestData["3. low"]),
+          close: parseFloat(latestData["4. close"]),
+          volume: parseInt(latestData["5. volume"]),
+        };
+
+        return res.json(intradayPriceData);
+      } else {
+        return res.status(404).json({ error: 'No intraday data found for this ticker.' });
+      }
+    } else {
+      return res.status(500).json({ error: 'Invalid response from API.' });
+    }
+  } catch (error) {
+    console.error(`Error fetching intraday data for ${ticker}:`, error);
+    res.status(500).json({ error: 'Error fetching intraday price data.' });
+  }
+});
+
+
+
+
+
+
 
 
 

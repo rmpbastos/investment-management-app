@@ -327,7 +327,7 @@ def fetch_sentiment_data(ticker):
                 # Extract relevant data
                 news_item = {
                     "ticker": ticker,
-                    "sector": sector,  # Add sector information here
+                    "sector": sector, 
                     "title": article.get("title"),
                     "url": article.get("url"),
                     "time_published": timestamp,

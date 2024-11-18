@@ -172,7 +172,7 @@ print("Standardizing features...")
 scaler = StandardScaler()
 X = scaler.fit_transform(features)
 
-# Convert target values to integers (0, 1, 2) if needed
+# Ensure target values are integers (0, 1, 2)
 y = target.astype(int)
 
 # Print the class distribution before resampling

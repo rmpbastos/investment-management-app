@@ -96,7 +96,8 @@ import numpy as np
 app = Flask(__name__)
 
 # Load the trained XGBoost model
-model_path = "./models/price_movement_model_xgboost_with_all_features.joblib"
+model_path = "./models/xgboost_model.joblib"
+# model_path = "./models/price_movement_model_xgboost_with_all_features.joblib"
 print(f"Loading model from: {model_path}")
 model = joblib.load(model_path)
 

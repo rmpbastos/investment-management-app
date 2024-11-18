@@ -189,7 +189,7 @@ def fetch_price_data(ticker):
         "function": "TIME_SERIES_DAILY_ADJUSTED",
         "symbol": ticker,
         "apikey": api_key,
-        "outputsize": "full"  # Fetch all historical data (last 20+ years)
+        "outputsize": "full"  
     }
     
     try:
