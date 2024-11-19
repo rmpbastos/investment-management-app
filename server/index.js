@@ -719,94 +719,6 @@ app.post('/api/total-wealth/create', async (req, res) => {
 
 
 
-// Route to handle stock sale
-app.post("/api/portfolio/sell", async (req, res) => {
-  const { userId, ticker, sellDate, quantitySold, sellPrice, brokerageFees } = req.body;
-
-  try {
-    // Fetch the user's portfolio
-    const portfolio = await Portfolio.findOne({ userId });
-    if (!portfolio) {
-      return res.status(404).json({ error: "Portfolio not found" });
-    }
-
-    // Find the stock in the portfolio
-    const stockIndex = portfolio.stocks.findIndex((s) => s.ticker === ticker);
-    if (stockIndex === -1) {
-      return res.status(404).json({ error: "Stock not found in portfolio" });
-    }
-
-    const stock = portfolio.stocks[stockIndex];
-
-    // Validate that the user is not selling more shares than they own
-    if (quantitySold > stock.quantity) {
-      return res.status(400).json({ error: "Cannot sell more shares than owned" });
-    }
-
-    // Initialize variables for FIFO calculation
-    let remainingQuantity = quantitySold;
-    let totalCostOfSoldShares = 0;
-
-    // Process sale using FIFO on purchaseLots
-    while (remainingQuantity > 0 && stock.purchaseLots.length > 0) {
-      const lot = stock.purchaseLots[0];
-
-      if (lot.quantity <= remainingQuantity) {
-        // Sell entire lot
-        totalCostOfSoldShares += lot.quantity * lot.purchasePrice;
-        remainingQuantity -= lot.quantity;
-        stock.purchaseLots.shift(); // Remove the sold lot
-      } else {
-        // Partially sell the lot
-        totalCostOfSoldShares += remainingQuantity * lot.purchasePrice;
-        lot.quantity -= remainingQuantity;
-        remainingQuantity = 0;
-      }
-    }
-
-    // Calculate the total sale value
-    const totalSaleValue = (quantitySold * sellPrice) - brokerageFees;
-
-    // Update the stock's quantity and total cost
-    stock.quantity -= quantitySold;
-    stock.totalCost -= totalCostOfSoldShares;
-
-    // If the stock's quantity is zero, remove it from the portfolio
-    if (stock.quantity === 0) {
-      portfolio.stocks.splice(stockIndex, 1);
-    }
-
-    // Save the updated portfolio
-    await portfolio.save();
-
-    // Record the sale in StockSaleHistory
-    const saleRecord = new StockSaleHistory({
-      userId,
-      ticker,
-      sellDate,
-      quantitySold,
-      sellPrice,
-      brokerageFees,
-      totalSaleValue,
-    });
-    await saleRecord.save();
-
-    // Update TotalWealth after the sale
-    try {
-      const updateResponse = await axios.post("http://localhost:5000/api/total-wealth/update", { userId });
-      console.log("Total wealth updated:", updateResponse.data);
-    } catch (updateError) {
-      console.error("Error updating total wealth:", updateError.message);
-    }
-
-    res.json({ message: "Stock sale recorded and portfolio updated successfully" });
-  } catch (error) {
-    console.error("Error handling stock sale:", error);
-    res.status(500).json({ error: "Error handling stock sale" });
-  }
-});
-
-
 
 
 
@@ -1122,6 +1034,88 @@ app.post('/api/fetch-price-data', async (req, res) => {
 
 
 
+
+// Route to handle stock sale
+app.post("/api/portfolio/sell", async (req, res) => {
+  const { userId, ticker, sellDate, quantitySold, sellPrice, brokerageFees } = req.body;
+
+  try {
+    // Log received data for debugging
+    console.log("Received data:", { userId, ticker, sellDate, quantitySold, sellPrice, brokerageFees });
+
+    // Fetch the user's portfolio
+    console.log("Querying Portfolio for userId:", userId);
+    const portfolio = await Portfolio.findOne({ userId });
+    console.log("Matching portfolio:", portfolio);
+
+    if (!portfolio) {
+      console.error("Portfolio not found for userId:", userId);
+      return res.status(404).json({ error: "Portfolio not found" });
+    }
+
+    // Find the stock in the portfolio
+    console.log("Searching for ticker:", ticker);
+    const stockIndex = portfolio.stocks.findIndex((s) => s.ticker === ticker);
+
+    if (stockIndex === -1) {
+      console.error("Stock not found in portfolio for ticker:", ticker);
+      return res.status(404).json({ error: "Stock not found in portfolio" });
+    }
+
+    const stock = portfolio.stocks[stockIndex];
+
+    // Validate that the user is not selling more shares than they own
+    if (quantitySold > stock.quantity) {
+      console.error("Attempt to sell more shares than owned for ticker:", ticker);
+      return res.status(400).json({ error: "Cannot sell more shares than owned" });
+    }
+
+    // Calculate the total sale value
+    const totalSaleValue = quantitySold * sellPrice - brokerageFees;
+
+    // Update the stock's quantity
+    stock.quantity -= quantitySold;
+
+    // If the stock's quantity becomes zero, remove it from the portfolio
+    if (stock.quantity === 0) {
+      console.log("Removing stock with ticker:", ticker);
+      portfolio.stocks.splice(stockIndex, 1);
+    }
+
+    // Save the updated portfolio
+    console.log("Saving updated portfolio...");
+    await portfolio.save();
+
+    // Record the sale in StockSaleHistory
+    const saleRecord = new StockSaleHistory({
+      userId,
+      ticker,
+      sellDate,
+      quantitySold,
+      sellingPrice: sellPrice,
+      brokerageFees,
+      totalSaleValue,
+    });
+
+    console.log("Saving stock sale history...");
+    await saleRecord.save();
+
+    // Update TotalWealth after the sale
+    try {
+      console.log("Updating total wealth for userId:", userId);
+      const updateResponse = await axios.post("http://localhost:5000/api/total-wealth/update", { userId });
+      console.log("Total wealth updated:", updateResponse.data);
+    } catch (updateError) {
+      console.error("Error updating total wealth:", updateError.message);
+    }
+
+    // Respond with success message
+    res.json({ message: "Stock sale recorded and portfolio updated successfully" });
+  } catch (error) {
+    console.error("Error handling stock sale:", error);
+    res.status(500).json({ error: "Error handling stock sale" });
+  }
+});
 
 
 

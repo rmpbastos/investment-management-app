@@ -117,18 +117,6 @@ const StockCard = ({ stock, onClick }) => {
     });
   };
 
-  // Handle click for the "Sell" button
-  const handleSellClick = () => {
-    navigate(`/sell-stock`, {
-      state: {
-        ticker,
-        name,
-        totalQuantity,
-        averagePurchasePrice,
-        totalCost,
-      },
-    });
-  };
 
   return (
     <div
@@ -310,12 +298,13 @@ const StockCard = ({ stock, onClick }) => {
 
       <br></br>
 
-      <button
+      {/* <button
         className="bg-red-500 text-white py-2 px-4 rounded-full mt-4 hover:bg-red-600 transition"
         onClick={handleSellClick}
       >
         Sell Stock
-      </button>
+      </button> */}
+
     </div>
   );
 };

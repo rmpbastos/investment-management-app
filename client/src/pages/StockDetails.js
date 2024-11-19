@@ -7,7 +7,6 @@ import { useAuth } from "../context/UserContext"; // Import useAuth to get user 
 // import StockCard from "../components/StockCard";
 import StockDetailsCard from "../components/StockDetailsCard";
 
-
 const StockDetails = () => {
   const { currentUser } = useAuth(); // Retrieve current user information
   const { ticker } = useParams(); // Get ticker from URL
@@ -17,12 +16,14 @@ const StockDetails = () => {
     const fetchStockDetails = async () => {
       try {
         if (!currentUser) return; // Wait until currentUser is available
-        
+
         // Fetch all stocks for the user
         const response = await axios.get(`/api/portfolio/${currentUser.uid}`);
-        
+
         // Filter stocks that match the selected ticker
-        const filteredStocks = response.data.filter(stock => stock.ticker === ticker);
+        const filteredStocks = response.data.filter(
+          (stock) => stock.ticker === ticker
+        );
         setStockDetails(filteredStocks); // Set the filtered stock data
       } catch (error) {
         console.error("Error fetching stock details:", error);
@@ -37,6 +38,13 @@ const StockDetails = () => {
       <Header />
       <main className="flex flex-col items-start justify-start flex-grow p-4">
         <h1 className="text-3xl font-bold mb-4">Details for {ticker}</h1>
+
+
+        <button className="bg-red-500 text-white py-2 px-4 rounded-full mt-4 hover:bg-red-600 transition">
+          Sell Stock
+        </button>
+
+
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 w-full">
           {stockDetails.length > 0 ? (
             stockDetails.map((stock, index) => (
