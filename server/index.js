@@ -434,7 +434,93 @@ app.post('/api/user-profile/create', async (req, res) => {
 
 
 
+// Working fine but overwritting previous entries for a user
+// app.post('/api/total-wealth/update', async (req, res) => {
+//   const { userId } = req.body;
+//   const apiKey = process.env.ALPHA_VANTAGE_API_KEY;
 
+//   try {
+//     const portfolio = await Portfolio.findOne({ userId });
+
+//     if (!portfolio || portfolio.stocks.length === 0) {
+//       return res.status(200).json({ totalWealth: 0, totalInvested: 0 });
+//     }
+
+//     let totalWealth = 0;
+//     let totalInvested = 0;
+
+//     for (const stock of portfolio.stocks) {
+//       const { ticker, quantity, purchasePrice, brokerageFees } = stock;
+
+//       // Attempt to fetch intraday data for real-time price
+//       const intradayUrl = `https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&symbol=${ticker}&interval=5min&apikey=${apiKey}`;
+
+//       let currentPrice = null;
+
+//       try {
+//         console.log(`Wealth: Fetching intraday price data for ${ticker}...`);
+//         const intradayResponse = await axios.get(intradayUrl);
+
+//         if (intradayResponse.headers['content-type'].includes('application/json')) {
+//           const intradayData = intradayResponse.data;
+//           const timeSeries = intradayData["Time Series (5min)"];
+
+//           if (timeSeries) {
+//             const latestTimestamp = Object.keys(timeSeries)[0];
+//             const latestIntradayData = timeSeries[latestTimestamp];
+//             currentPrice = parseFloat(latestIntradayData["4. close"]);
+//           }
+//         }
+//       } catch (error) {
+//         console.error(`Error fetching intraday price for ${ticker}:`, error.message);
+//       }
+
+//       // If intraday data is not available, fallback to daily adjusted data
+//       if (!currentPrice) {
+//         const dailyUrl = `https://www.alphavantage.co/query?function=TIME_SERIES_DAILY_ADJUSTED&symbol=${ticker}&apikey=${apiKey}`;
+
+//         try {
+//           console.log(`Fetching daily adjusted price data for ${ticker}...`);
+//           const dailyResponse = await axios.get(dailyUrl);
+
+//           if (dailyResponse.headers['content-type'].includes('application/json')) {
+//             const dailyData = dailyResponse.data;
+//             if (dailyData["Time Series (Daily)"]) {
+//               const latestDate = Object.keys(dailyData["Time Series (Daily)"])[0];
+//               const latestDailyData = dailyData["Time Series (Daily)"][latestDate];
+//               currentPrice = parseFloat(latestDailyData["4. close"]);
+//             }
+//           }
+//         } catch (error) {
+//           console.error(`Error fetching daily adjusted price for ${ticker}:`, error.message);
+//         }
+//       }
+
+//       // If a valid current price was fetched, update total wealth
+//       if (!isNaN(currentPrice)) {
+//         totalWealth += currentPrice * quantity;
+//       }
+
+//       // Calculate total invested amount
+//       totalInvested += (quantity * purchasePrice) + brokerageFees;
+//     }
+
+//     // Update total wealth in the database
+//     const userWealth = await TotalWealth.findOneAndUpdate(
+//       { userId },
+//       { totalWealth, totalInvested, calculationDate: new Date() },
+//       { upsert: true, new: true }
+//     );
+
+//     res.status(200).json({ totalWealth: userWealth.totalWealth, totalInvested: userWealth.totalInvested });
+//   } catch (error) {
+//     console.error('Error updating total wealth:', error);
+//     res.status(500).json({ error: 'Error updating total wealth' });
+//   }
+// });
+
+
+// Creating one entry per calculation
 app.post('/api/total-wealth/update', async (req, res) => {
   const { userId } = req.body;
   const apiKey = process.env.ALPHA_VANTAGE_API_KEY;
@@ -458,7 +544,7 @@ app.post('/api/total-wealth/update', async (req, res) => {
       let currentPrice = null;
 
       try {
-        console.log(`Fetching intraday price data for ${ticker}...`);
+        console.log(`Wealth: Fetching intraday price data for ${ticker}...`);
         const intradayResponse = await axios.get(intradayUrl);
 
         if (intradayResponse.headers['content-type'].includes('application/json')) {
@@ -505,12 +591,15 @@ app.post('/api/total-wealth/update', async (req, res) => {
       totalInvested += (quantity * purchasePrice) + brokerageFees;
     }
 
-    // Update total wealth in the database
-    const userWealth = await TotalWealth.findOneAndUpdate(
-      { userId },
-      { totalWealth, totalInvested, calculationDate: new Date() },
-      { upsert: true, new: true }
-    );
+    // Add a new entry for the total wealth in the database
+    const userWealth = new TotalWealth({
+      userId,
+      totalWealth,
+      totalInvested,
+      calculationDate: new Date(),
+    });
+
+    await userWealth.save();
 
     res.status(200).json({ totalWealth: userWealth.totalWealth, totalInvested: userWealth.totalInvested });
   } catch (error) {
@@ -722,6 +811,41 @@ app.post("/api/portfolio/sell", async (req, res) => {
 
 
 // Route to Fetch Sentiment Data
+// app.post('/api/stock/sentiment/:ticker', async (req, res) => {
+//   const { ticker } = req.params;
+//   const apiKey = process.env.ALPHA_VANTAGE_API_KEY;
+
+//   if (!ticker) {
+//     return res.status(400).json({ error: 'Ticker symbol is required.' });
+//   }
+
+//   const sentimentUrl = `https://www.alphavantage.co/query?function=NEWS_SENTIMENT&tickers=${ticker}&apikey=${apiKey}`;
+
+//   try {
+//     console.log(`Fetching sentiment data for ${ticker}...`);
+//     const response = await axios.get(sentimentUrl);
+
+//     if (response.headers['content-type'].includes('application/json')) {
+//       const data = response.data;
+//       if (data.feed && data.feed.length > 0) {
+//         const latestArticle = data.feed[0];
+//         const overallSentimentScore = parseFloat(latestArticle.overall_sentiment_score) || 0;
+//         const tickerSentimentScore = parseFloat(latestArticle.ticker_sentiment?.[0]?.ticker_sentiment_score) || 0;
+
+//         return res.json({ overallSentimentScore, tickerSentimentScore });
+//       } else {
+//         return res.status(404).json({ error: 'No sentiment data found for this ticker.' });
+//       }
+//     } else {
+//       return res.status(500).json({ error: 'Invalid response from API.' });
+//     }
+//   } catch (error) {
+//     console.error(`Error fetching sentiment data for ${ticker}:`, error);
+//     res.status(500).json({ error: 'Error fetching sentiment data.' });
+//   }
+// });
+
+
 app.post('/api/stock/sentiment/:ticker', async (req, res) => {
   const { ticker } = req.params;
   const apiKey = process.env.ALPHA_VANTAGE_API_KEY;
@@ -738,12 +862,26 @@ app.post('/api/stock/sentiment/:ticker', async (req, res) => {
 
     if (response.headers['content-type'].includes('application/json')) {
       const data = response.data;
+
       if (data.feed && data.feed.length > 0) {
+        // Get overall sentiment score
         const latestArticle = data.feed[0];
         const overallSentimentScore = parseFloat(latestArticle.overall_sentiment_score) || 0;
-        const tickerSentimentScore = parseFloat(latestArticle.ticker_sentiment?.[0]?.ticker_sentiment_score) || 0;
 
-        return res.json({ overallSentimentScore, tickerSentimentScore });
+        // Find the specific sentiment data for the requested ticker
+        const tickerSentimentData = latestArticle.ticker_sentiment?.find(
+          (sentiment) => sentiment.ticker === ticker.toUpperCase()
+        );
+
+        const tickerSentimentScore =
+          tickerSentimentData && tickerSentimentData.ticker_sentiment_score
+            ? parseFloat(tickerSentimentData.ticker_sentiment_score)
+            : 0;
+
+        return res.json({
+          overallSentimentScore,
+          tickerSentimentScore,
+        });
       } else {
         return res.status(404).json({ error: 'No sentiment data found for this ticker.' });
       }
@@ -755,6 +893,13 @@ app.post('/api/stock/sentiment/:ticker', async (req, res) => {
     res.status(500).json({ error: 'Error fetching sentiment data.' });
   }
 });
+
+
+
+
+
+
+
 
 // Route to Fetch Price Data for the ML model
 app.post('/api/stock/latest/:ticker', async (req, res) => {
