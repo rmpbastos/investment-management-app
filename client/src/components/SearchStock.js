@@ -168,7 +168,7 @@ const SearchStock = ({ setPortfolio }) => {
         />
         <button
           onClick={handleSearch}
-          className="bg-blue-500 text-white px-4 py-2 rounded-r hover:bg-blue-600 transition duration-300"
+          className="bg-blue-950 text-white px-4 py-2 rounded-r hover:bg-blue-700 transition duration-300"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"

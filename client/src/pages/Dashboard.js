@@ -924,7 +924,7 @@ const Dashboard = () => {
           <>
             {/* Overview Section */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-              <div className="bg-white shadow-md rounded-lg p-4 text-center">
+              <div className="bg-white shadow-md rounded-lg p-4 border-t-4 border-[#1c2e3a] text-center">
                 <h3 className="text-lg font-bold">Total Wealth</h3>
                 <p className="text-2xl font-semibold">
                   $
@@ -934,7 +934,7 @@ const Dashboard = () => {
                   })}
                 </p>
               </div>
-              <div className="bg-white shadow-md rounded-lg p-4 text-center">
+              <div className="bg-white shadow-md rounded-lg p-4 border-t-4 border-[#1c2e3a] text-center">
                 <h3 className="text-lg font-bold">Total Invested</h3>
                 <p className="text-2xl font-semibold">
                   $
@@ -944,7 +944,7 @@ const Dashboard = () => {
                   })}
                 </p>
               </div>
-              <div className="bg-white shadow-md rounded-lg p-4 text-center">
+              <div className="bg-white shadow-md rounded-lg p-4 border-t-4 border-[#1c2e3a] text-center">
                 <h3 className="text-lg font-bold">Profit</h3>
                 <p
                   className={`text-2xl font-semibold ${
@@ -964,7 +964,8 @@ const Dashboard = () => {
             <h2 className="text-2xl font-bold mb-4">Portfolio Analysis</h2>
 
             {/* Charts Section */}
-            <div className="bg-white shadow-md rounded-lg p-6 w-full mb-10">
+
+            <div className="bg-white shadow-md rounded-lg p-6 border-t-4 border-[#1c2e3a] w-full mb-10">
               <div className="flex flex-col md:flex-row justify-between items-start w-full gap-6">
                 {/* Portfolio Pie Chart */}
                 <div className="flex justify-center items-center w-full md:w-1/3 h-80">

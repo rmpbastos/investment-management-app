@@ -455,7 +455,7 @@ const Header = ({ setPortfolio }) => {
       </div>
       <button
         onClick={handleLogout}
-        className="bg-red-500 text-white py-1 px-1 rounded-lg hover:bg-red-600 transition duration-300"
+        className="bg-blue-950 text-white py-2 px-2 rounded-lg hover:bg-red-800 transition duration-300"
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
