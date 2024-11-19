@@ -1077,39 +1077,108 @@ app.get('/api/total-wealth/history/:userId', async (req, res) => {
 
 
 
+// Fetch Historical Price Data (To send data for prediction)
+app.post('/api/fetch-price-data', async (req, res) => {
+  const { ticker } = req.body;
+  const apiKey = process.env.ALPHA_VANTAGE_API_KEY;
 
+  if (!ticker) {
+    return res.status(400).json({ error: 'Ticker is required.' });
+  }
 
-
-
-
-
-
-
-
-
-
-
-
-// ******************** FLASK API TEST ********************
-// Route to forward prediction requests to Flask
-app.post('/api/predict', async (req, res) => {
   try {
-    // Forward the request body directly to the Flask API
-    const flaskResponse = await axios.post('http://127.0.0.1:5001/predict', req.body);
+    // Fetch historical price data
+    const response = await axios.get(
+      `https://www.alphavantage.co/query?function=TIME_SERIES_DAILY_ADJUSTED&symbol=${ticker}&apikey=${apiKey}&outputsize=full`
+    );
 
-    // Send the Flask response back to the frontend
-    res.status(200).json(flaskResponse.data);
+    if (response.data['Time Series (Daily)']) {
+      const historicalData = Object.entries(response.data['Time Series (Daily)']).map(
+        ([date, data]) => ({
+          date,
+          open: parseFloat(data['1. open']),
+          high: parseFloat(data['2. high']),
+          low: parseFloat(data['3. low']),
+          close: parseFloat(data['4. close']),
+          adjusted_close: parseFloat(data['5. adjusted close']),
+          volume: parseInt(data['6. volume'], 10),
+          dividend_amount: parseFloat(data['7. dividend amount']),
+          split_coefficient: parseFloat(data['8. split coefficient']),
+        })
+      );
+
+      return res.status(200).json(historicalData);
+    } else {
+      return res.status(404).json({ error: 'No historical data found.' });
+    }
   } catch (error) {
-    console.error('Error communicating with Flask API:', error.message);
-
-    // Send a detailed error response
-    res.status(500).json({
-      error: 'Error communicating with Flask API',
-      message: error.message,
-      stack: error.stack || null,
-    });
+    console.error('Error fetching historical data:', error.message);
+    return res.status(500).json({ error: 'Failed to fetch historical data.' });
   }
 });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// ******************** FLASK API PREDICTION ********************
+// Route to forward prediction requests to Flask
+// app.post('/api/predict', async (req, res) => {
+//   try {
+//     // Forward the request body directly to the Flask API
+//     const flaskResponse = await axios.post('http://127.0.0.1:5001/predict', req.body);
+
+//     // Send the Flask response back to the frontend
+//     res.status(200).json(flaskResponse.data);
+//   } catch (error) {
+//     console.error('Error communicating with Flask API:', error.message);
+
+//     // Send a detailed error response
+//     res.status(500).json({
+//       error: 'Error communicating with Flask API',
+//       message: error.message,
+//       stack: error.stack || null,
+//     });
+//   }
+// });
+
+
+// Working (with logs)
+app.post('/api/predict', async (req, res) => {
+  try {
+      console.log("Received payload for prediction:", req.body);
+
+      // Forward the request to the Flask API
+      const flaskResponse = await axios.post('http://127.0.0.1:5001/predict', req.body);
+
+      console.log("Prediction result from Flask API:", flaskResponse.data);
+
+      // Send the Flask response back to the frontend
+      res.status(200).json(flaskResponse.data);
+  } catch (error) {
+      console.error("Error communicating with Flask API:", error.message);
+      res.status(500).json({
+          error: "Error communicating with Flask API",
+          message: error.message,
+          stack: error.stack || null,
+      });
+  }
+});
+
+
+
+
 
 
 
