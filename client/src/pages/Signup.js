@@ -238,7 +238,11 @@ const Signup = () => {
 
   const handleSignup = async () => {
     try {
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const userCredential = await createUserWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
       const user = userCredential.user;
 
       await axios.post("/api/user-profile/create", {
@@ -304,18 +308,29 @@ const Signup = () => {
     <div className="flex flex-col lg:flex-row items-center justify-center h-screen bg-gradient-to-r from-green-400 via-blue-500 to-purple-600">
       {/* Text Section */}
       <div className="text-center lg:text-left lg:mr-12 mb-8 lg:mb-0 max-w-lg">
+        {/* Logo and App Name Section */}
+        <div className="flex items-center mb-6">
+          <img
+            src={require("../assets/logo/icon_sm.png")}
+            alt="InvestWise Logo"
+            className="w-16 h-16 mr-4"
+          />
+          <h2 className="text-4xl font-bold text-white">InvestWise</h2>
+        </div>
         <h1 className="text-5xl font-extrabold text-white mb-4">
           Join the Future of Investment
         </h1>
         <p className="text-xl text-white leading-relaxed">
-          Take control of your finances with ease. Create an account today and
-          start managing your portfolio like a pro.
+          Sign up now and experience the next generation of portfolio management
+          with AI at your side.
         </p>
       </div>
 
       {/* Signup Card */}
       <div className="bg-white p-8 rounded-lg shadow-lg max-w-sm w-full">
-        <h2 className="text-3xl font-bold text-center text-gray-800 mb-4">Sign Up</h2>
+        <h2 className="text-3xl font-bold text-center text-gray-800 mb-4">
+          Sign Up
+        </h2>
         {error && <p className="text-red-500 mb-4">{error}</p>}
         <input
           type="email"
@@ -353,4 +368,3 @@ const Signup = () => {
 };
 
 export default Signup;
-

@@ -35,7 +35,7 @@
 //       try {
 //         console.log(`Fetching total wealth for userId: ${currentUser.uid}`);  // Debug line
 //         const response = await axios.get(`/api/total-wealth/${currentUser.uid}`);
-        
+
 //         if (response.data && response.data.totalWealth !== undefined) {
 //           setTotalWealth(response.data.totalWealth);
 //         } else {
@@ -148,9 +148,6 @@
 
 // export default Header;
 
-
-
-
 // Header calling /api/total-wealth/update when app loads, checking if the total wealth is already calculated for today.
 
 // import { useEffect, useState } from "react";
@@ -185,12 +182,12 @@
 //   // Fetch and update the total wealth
 //   const fetchTotalWealth = async () => {
 //     if (!currentUser) return;
-  
+
 //     try {
 //       console.log(`Updating total wealth for userId: ${currentUser.uid}`);
 //       // Directly update total wealth without checking the calculation date
 //       const response = await axios.post(`/api/total-wealth/update`, { userId: currentUser.uid });
-  
+
 //       if (response.data && response.data.totalWealth !== undefined) {
 //         setTotalWealth(response.data.totalWealth);
 //       } else {
@@ -199,7 +196,7 @@
 //     } catch (error) {
 //       console.error("Error updating total wealth:", error);
 //     }
-//   };  
+//   };
 
 //   // Fetch the total wealth when the component loads
 //   useEffect(() => {
@@ -284,27 +281,26 @@
 //         onClick={handleLogout}
 //         className="bg-red-500 text-white py-1 px-1 rounded-lg hover:bg-red-600 transition duration-300"
 //       >
-        // <svg
-        //   xmlns="http://www.w3.org/2000/svg"
-        //   fill="none"
-        //   viewBox="0 0 24 24"
-        //   strokeWidth={1.5}
-        //   stroke="currentColor"
-        //   className="size-6"
-        // >
-        //   <path
-        //     strokeLinecap="round"
-        //     strokeLinejoin="round"
-        //     d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15m3 0 3-3m0 0-3-3m3 3H9"
-        //   />
-        // </svg>
+// <svg
+//   xmlns="http://www.w3.org/2000/svg"
+//   fill="none"
+//   viewBox="0 0 24 24"
+//   strokeWidth={1.5}
+//   stroke="currentColor"
+//   className="size-6"
+// >
+//   <path
+//     strokeLinecap="round"
+//     strokeLinejoin="round"
+//     d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15m3 0 3-3m0 0-3-3m3 3H9"
+//   />
+// </svg>
 //       </button>
 //     </header>
 //   );
 // };
 
 // export default Header;
-
 
 // Updated header fetching cached data from UserContext
 import { useEffect, useState } from "react";
@@ -336,63 +332,37 @@ const Header = ({ setPortfolio }) => {
     setIsBlurred(!isBlurred);
   };
 
-  // // Fetch and update the total wealth directly using the existing API call
-  // const fetchTotalWealth = async () => {
-  //   if (!currentUser) return;
-
-  //   try {
-  //     console.log(`Updating total wealth for userId: ${currentUser.uid}`);
-  //     const response = await axios.post(`/api/total-wealth/update`, {
-  //       userId: currentUser.uid,
-  //     });
-
-  //     if (response.data && response.data.totalWealth !== undefined) {
-  //       setTotalWealth(response.data.totalWealth);
-  //     } else {
-  //       console.log("Total wealth not found or not updated for this user.");
-  //     }
-  //   } catch (error) {
-  //     console.error("Error updating total wealth:", error);
-  //   }
-  // };
-
-  // // Fetch the total wealth when the component loads
-  // useEffect(() => {
-  //   fetchTotalWealth();
-  // }, [currentUser]);
-
-
-
-
-
   // Fetching latest total wealth from the database instead of making api calls
   useEffect(() => {
     const fetchTotalWealth = async () => {
       if (!currentUser) return;
-  
+
       try {
-        const response = await axios.get(`/api/total-wealth/${currentUser.uid}`);
-  
+        const response = await axios.get(
+          `/api/total-wealth/${currentUser.uid}`
+        );
+
         if (response.data) {
           setTotalWealth(response.data.totalWealth);
         } else {
-          console.log('Total wealth not found for this user.');
+          console.log("Total wealth not found for this user.");
         }
       } catch (error) {
-        console.error('Error fetching total wealth:', error);
+        console.error("Error fetching total wealth:", error);
       }
     };
-  
+
     fetchTotalWealth();
   }, [currentUser]);
-
-  
-
 
   return (
     <header className="bg-white shadow-md py-4 px-6 flex justify-between items-center">
       <div className="flex items-center">
-        <img src="/icon_sm.png" alt="InvestWise Logo" className="h-8 w-8 mr-2" />
+        <img
+          src="/icon_sm.png"
+          alt="InvestWise Logo"
+          className="h-8 w-8 mr-2"
+        />
         <h1 className="text-lg font-bold text-gray-800">InvestWise</h1>
       </div>
       <nav className="flex-grow ml-8">
@@ -401,6 +371,12 @@ const Header = ({ setPortfolio }) => {
           onClick={() => navigate("/dashboard")}
         >
           Dashboard
+        </button>
+        <button
+          className="px-4 py-2 border-2 border-gray-300 rounded-lg text-gray-600 hover:text-gray-800 hover:border-gray-400 transition ml-4"
+          onClick={() => navigate("/ai-explained")}
+        >
+          AI Explained
         </button>
       </nav>
       <div className="flex items-center mr-4">
@@ -446,8 +422,16 @@ const Header = ({ setPortfolio }) => {
             </svg>
           )}
         </button>
-        <p className={`text-lg font-bold text-gray-800 ${isBlurred ? "blur-sm" : ""}`}>
-          Total Wealth: ${totalWealth.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+        <p
+          className={`text-lg font-bold text-gray-800 ${
+            isBlurred ? "blur-sm" : ""
+          }`}
+        >
+          Total Wealth: $
+          {totalWealth.toLocaleString("en-US", {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+          })}
         </p>
       </div>
       <div className="relative w-1/3 mr-4">
@@ -477,4 +461,3 @@ const Header = ({ setPortfolio }) => {
 };
 
 export default Header;
-

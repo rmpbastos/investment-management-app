@@ -12,6 +12,7 @@ import PrivateRoute from "./components/PrivateRoute";
 import StockDetailsForm from "./pages/StockDetailsForm";
 import StockDetails from "./pages/StockDetails";
 import SellStockForm from "./pages/SellStockForm";
+import AIExplained from "./pages/AIExplained";
 
 function App() {
   return (
@@ -40,6 +41,14 @@ function App() {
           element={
             <PrivateRoute>
               <StockDetailsForm />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/ai-explained"
+          element={
+            <PrivateRoute>
+              <AIExplained />
             </PrivateRoute>
           }
         />

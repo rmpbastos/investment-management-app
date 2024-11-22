@@ -210,15 +210,21 @@ const Login = () => {
 
   return (
     <div className="flex flex-col lg:flex-row items-center justify-center h-screen bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500">
-      {/* Text Section */}
-      <div className="text-center lg:text-left lg:mr-12 mb-8 lg:mb-0 max-w-lg">
-        <h1 className="text-5xl font-extrabold text-white mb-4">
-          Welcome Back!
-        </h1>
-        <p className="text-xl text-white leading-relaxed">
-          Continue where you left off. Log in now and start managing your investments and achieving your goals.
-        </p>
-      </div>
+{/* Text Section */}
+<div className="text-center lg:text-left lg:mr-12 mb-8 lg:mb-0 max-w-lg">
+  {/* Logo and App Name Section */}
+  <div className="flex items-center mb-6">
+    <img src={require("../assets/logo/icon_sm.png")} alt="InvestWise Logo" className="w-16 h-16 mr-4" />
+    <h2 className="text-4xl font-bold text-white">InvestWise</h2>
+  </div>
+  <h1 className="text-5xl font-extrabold text-white mb-4">
+    Welcome Back!
+  </h1>
+  <p className="text-xl text-white leading-relaxed">
+    Continue where you left off. Log in now and start managing your investments and achieving your goals.
+  </p>
+</div>
+
 
       {/* Login Card */}
       <div className="bg-white p-8 rounded-lg shadow-lg max-w-sm w-full">
@@ -261,3 +267,7 @@ const Login = () => {
 };
 
 export default Login;
+
+
+
+
