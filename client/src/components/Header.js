@@ -374,6 +374,12 @@ const Header = ({ setPortfolio }) => {
         </button>
         <button
           className="px-4 py-2 border-2 border-gray-300 rounded-lg text-gray-600 hover:text-gray-800 hover:border-gray-400 transition ml-4"
+          onClick={() => navigate("/news-sentiment")}
+        >
+          Latest News
+        </button>
+        <button
+          className="px-4 py-2 border-2 border-gray-300 rounded-lg text-gray-600 hover:text-gray-800 hover:border-gray-400 transition ml-4"
           onClick={() => navigate("/ai-explained")}
         >
           AI Explained

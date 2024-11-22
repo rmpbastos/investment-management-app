@@ -1173,8 +1173,94 @@ app.post('/api/predict', async (req, res) => {
 
 
 
+// Route to fetch news sentiment for multiple tickers
+// app.post('/api/news-sentiment', async (req, res) => {
+//   const { tickers } = req.body; // Array of tickers
+//   const apiKey = process.env.ALPHA_VANTAGE_API_KEY;
+
+//   if (!tickers || tickers.length === 0) {
+//     return res.status(400).json({ error: 'No tickers provided.' });
+//   }
+
+//   try {
+//     const allNews = [];
+
+//     // Fetch news for each ticker
+//     for (const ticker of tickers) {
+//       const response = await axios.get(
+//         `https://www.alphavantage.co/query?function=NEWS_SENTIMENT&tickers=${ticker}&apikey=${apiKey}`
+//       );
+
+//       if (response.data?.feed) {
+//         // Extract the most recent 5 news articles
+//         const news = response.data.feed
+//           .slice(0, 5) // Limit to 5 articles per ticker
+//           .map((article) => ({
+//             title: article.title,
+//             url: article.url,
+//             summary: article.summary,
+//             sentiment_label: article.overall_sentiment_label,
+//             sentiment_score: article.overall_sentiment_score,
+//             ticker_sentiments: article.ticker_sentiment.filter((t) =>
+//               tickers.includes(t.ticker)
+//             ),
+//             published_date: article.time_published,
+//           }));
+//         allNews.push(...news);
+//       }
+//     }
+
+//     res.status(200).json(allNews);
+//   } catch (error) {
+//     console.error('Error fetching news sentiment:', error);
+//     res.status(500).json({ error: 'Error fetching news sentiment data.' });
+//   }
+// });
 
 
+
+
+// Route to fetch news sentiment for multiple tickers
+app.post('/api/news-sentiment', async (req, res) => {
+  const { tickers } = req.body; // Array of tickers
+  const apiKey = process.env.ALPHA_VANTAGE_API_KEY;
+
+  if (!tickers || tickers.length === 0) {
+    return res.status(400).json({ error: 'No tickers provided.' });
+  }
+
+  try {
+    const allNewsByTicker = {};
+
+    // Fetch news for each ticker
+    for (const ticker of tickers) {
+      const response = await axios.get(
+        `https://www.alphavantage.co/query?function=NEWS_SENTIMENT&tickers=${ticker}&apikey=${apiKey}`
+      );
+
+      if (response.data?.feed) {
+        // Extract and clean relevant news articles
+        const news = response.data.feed.map((article) => ({
+          title: article.title,
+          url: article.url,
+          summary: article.summary,
+          sentiment_label: article.overall_sentiment_label,
+          sentiment_score: article.overall_sentiment_score,
+          ticker_sentiments: article.ticker_sentiment.filter((t) => t.ticker === ticker),
+          published_date: article.time_published,
+        }));
+
+        // Add news to the specific ticker in the object
+        allNewsByTicker[ticker] = news;
+      }
+    }
+
+    res.status(200).json(allNewsByTicker);
+  } catch (error) {
+    console.error('Error fetching news sentiment:', error);
+    res.status(500).json({ error: 'Error fetching news sentiment data.' });
+  }
+});
 
 
 

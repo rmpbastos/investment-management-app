@@ -13,6 +13,7 @@ import StockDetailsForm from "./pages/StockDetailsForm";
 import StockDetails from "./pages/StockDetails";
 import SellStockForm from "./pages/SellStockForm";
 import AIExplained from "./pages/AIExplained";
+import NewsSentimentPage from "./pages/NewsSentimentPage";
 
 function App() {
   return (
@@ -49,6 +50,14 @@ function App() {
           element={
             <PrivateRoute>
               <AIExplained />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/news-sentiment"
+          element={
+            <PrivateRoute>
+              <NewsSentimentPage />
             </PrivateRoute>
           }
         />
