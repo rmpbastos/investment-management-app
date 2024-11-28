@@ -40,9 +40,9 @@ const StockDetails = () => {
         <h1 className="text-3xl font-bold mb-4">Details for {ticker}</h1>
 
 
-        <button className="bg-red-500 text-white py-2 px-4 rounded-full mt-4 hover:bg-red-600 transition">
+        {/* <button className="bg-red-500 text-white py-2 px-4 rounded-full mt-4 hover:bg-red-600 transition">
           Sell Stock
-        </button>
+        </button> */}
 
 
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 w-full">
