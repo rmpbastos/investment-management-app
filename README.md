@@ -1,4 +1,7 @@
-# investment-management-app
+
+<img src="client/public/icon_sm.png" width="150" style="float: left; margin-right: 10px;" />
+
+# InvestWise
 
 ## Steps to run the app locally on a Windows machine:
 1. Activate the Python environment and the Flask API component
@@ -21,6 +24,8 @@
    
    **python app.py**
 
+<br>
+
 2. Activate the server at \server:
 
    3.1 Install necessary packages:
@@ -30,6 +35,8 @@
    3.2 Run the server:
 
    **nodemon index**
+
+<br>
 
 3. Activate the frontend at \client:
 
