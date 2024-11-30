@@ -40,3 +40,6 @@
    3.2 Run the frontend:
 
    **npm start**
+
+
+Note: The package installation process may take several minutes.
