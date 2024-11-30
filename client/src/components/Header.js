@@ -361,25 +361,25 @@ const Header = ({ setPortfolio }) => {
         <img
           src="/icon_sm.png"
           alt="InvestWise Logo"
-          className="h-8 w-8 mr-2"
+          className="h-9 w-9 mr-2"
         />
-        <h1 className="text-lg font-bold text-gray-800">InvestWise</h1>
+        <h1 className="text-xl font-bold text-gray-800">InvestWise</h1>
       </div>
       <nav className="flex-grow ml-8">
         <button
-          className="px-4 py-2 border-2 border-gray-300 rounded-lg text-gray-600 hover:text-gray-800 hover:border-gray-400 transition"
+          className="px-4 py-2 border-2 bg-blue-950 hover:bg-blue-800 border-gray-300 rounded-lg text-gray-200 hover:text-gray-50 hover:border-gray-400 transition"
           onClick={() => navigate("/dashboard")}
         >
           Dashboard
         </button>
         <button
-          className="px-4 py-2 border-2 border-gray-300 rounded-lg text-gray-600 hover:text-gray-800 hover:border-gray-400 transition ml-4"
+          className="px-4 py-2 border-2 bg-blue-950 hover:bg-blue-800 border-gray-300 rounded-lg text-gray-200 hover:text-gray-50 hover:border-gray-400 transition ml-4"
           onClick={() => navigate("/news-sentiment")}
         >
           Latest News
         </button>
         <button
-          className="px-4 py-2 border-2 border-gray-300 rounded-lg text-gray-600 hover:text-gray-800 hover:border-gray-400 transition ml-4"
+          className="px-4 py-2 border-2 bg-blue-950 hover:bg-blue-800 border-gray-300 rounded-lg text-gray-200 hover:text-gray-50 hover:border-gray-400 transition ml-4"
           onClick={() => navigate("/ai-explained")}
         >
           AI Explained

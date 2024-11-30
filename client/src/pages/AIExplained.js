@@ -58,4 +58,3 @@ const AIExplained = () => {
 };
 
 export default AIExplained;
-
